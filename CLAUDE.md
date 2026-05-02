@@ -11,7 +11,7 @@ This file is the source of truth for stack, architecture, and the reasoning behi
 | Layer | Choice | Notes |
 |---|---|---|
 | Monorepo | pnpm workspaces + Turborepo | Turborepo added when build times start to matter, not before |
-| Backend | NestJS 11 + Prisma + PostgreSQL 15 | Redis added later for queues/cache/sessions |
+| Backend | NestJS 11 + Prisma + PostgreSQL 15 | Redis explicitly deferred — see "Architecture decisions" |
 | Web frontend | Next.js 15 (App Router) + TypeScript | Replaces the current Vite+React scaffold |
 | UI | Tailwind CSS + shadcn/ui | Owned components, no UI-library lock-in |
 | Data fetching | TanStack Query + (RSC + Server Actions where it fits) | Avoid client state libs until needed |
@@ -67,7 +67,7 @@ Every tenant-scoped table carries `workspaceId` (or `orgId` — name TBD with au
 ### Database: PostgreSQL
 - Relational + JSONB covers everything a PM tool needs.
 - Universal cloud support, mature operational story, RLS available.
-- Redis added later for: BullMQ job queues (notifications, webhooks), session cache, rate-limit counters. Not now.
+- **Redis is deferred.** For low-scale v1: Postgres-backed queues (`pg-boss`) handle background jobs, Nest's in-memory throttler handles rate limiting, Next.js handles its own caching. Add Redis only when one of: (a) we run >1 API instance and need shared rate-limit/cache state, (b) job throughput exceeds what `pg-boss` can handle, (c) we need realtime pub/sub Postgres `LISTEN/NOTIFY` can't keep up with.
 
 ### Auth: Clerk OR better-auth (decision deferred)
 - **Clerk** if we prioritize speed and are okay paying — built-in orgs, invitations, MFA, social login, webhook → workspace creation flow.
