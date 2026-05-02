@@ -1,0 +1,10 @@
+{
+  "name": "project-manager-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:frontend": "pnpm --filter frontend dev",
+    "dev:backend": "pnpm --filter backend start:dev",
+    "dev": "pnpm run dev:backend & pnpm run dev:frontend"
+  }
+}
