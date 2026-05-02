@@ -3,8 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev:frontend": "pnpm --filter frontend dev",
-    "dev:backend": "pnpm --filter backend start:dev",
-    "dev": "pnpm run dev:backend & pnpm run dev:frontend"
+    "dev:api": "pnpm --filter api start:dev",
+    "dev:web": "pnpm --filter web dev",
+    "dev": "concurrently -n api,web -c blue,magenta \"pnpm run dev:api\" \"pnpm run dev:web\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
   }
 }
