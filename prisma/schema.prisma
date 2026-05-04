@@ -1,0 +1,147 @@
+// Project Manager — Prisma schema
+// Single-user personal project manager. Models: User, Project, Tag, ProjectTag.
+// Auth.js v5 also requires Account, Session, VerificationToken.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum ProjectStatus {
+  IDEA
+  PLANNING
+  IN_PROGRESS
+  SHIPPED
+  PAUSED
+  ABANDONED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+// ─── Auth.js v5 (Prisma adapter) ──────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  image         String?
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+  projects Project[]
+  tags     Tag[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Domain ───────────────────────────────────────────────────────────────────
+
+model Project {
+  id            String        @id @default(cuid())
+  userId        String
+  title         String
+  status        ProjectStatus @default(IDEA)
+  tagline       String?
+  description   String?       @db.Text
+  techStack     String[]      // Postgres text[]
+  startDate     DateTime?
+  targetEndDate DateTime?
+  actualEndDate DateTime?
+  priority      Priority      @default(MEDIUM)
+  githubUrl     String?
+  liveUrl       String?
+  designUrl     String?
+  docsUrl       String?
+  notes         Json?         // Tiptap JSON document
+  progress      Int           @default(0) // 0–100
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  deletedAt     DateTime?
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectTags ProjectTag[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([priority])
+  @@index([createdAt])
+  @@index([deletedAt])
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  color     String   // hex e.g. "#7C3AED"
+  createdAt DateTime @default(now())
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectTags ProjectTag[]
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+model ProjectTag {
+  projectId String
+  tagId     String
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, tagId])
+  @@index([projectId])
+  @@index([tagId])
+}
