@@ -1,9 +1,13 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import type { Priority, ProjectStatus } from "@prisma/client";
+import type { Priority, Project, ProjectStatus, ProjectTag, Tag } from "@prisma/client";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+
+export type ProjectWithTags = Project & {
+  projectTags: (ProjectTag & { tag: Tag })[];
+};
 
 // ─── Auth helper ──────────────────────────────────────────────────────────────
 
@@ -234,5 +238,8 @@ export async function getRecentProjects(userId: string, take = 5) {
     where: { userId, deletedAt: null },
     orderBy: { updatedAt: "desc" },
     take,
+    include: {
+      projectTags: { include: { tag: true } },
+    },
   });
 }

@@ -79,10 +79,22 @@ export default async function ProjectsPage({
                 id: p.id,
                 title: p.title,
                 tagline: p.tagline,
+                description: p.description,
                 status: p.status,
                 priority: p.priority,
                 techStack: p.techStack,
                 progress: p.progress,
+                startDate: p.startDate,
+                targetEndDate: p.targetEndDate,
+                githubUrl: p.githubUrl,
+                liveUrl: p.liveUrl,
+                designUrl: p.designUrl,
+                docsUrl: p.docsUrl,
+                tags: p.projectTags.map((pt) => ({
+                  id: pt.tag.id,
+                  name: pt.tag.name,
+                  color: pt.tag.color,
+                })),
                 updatedAt: p.updatedAt,
               }}
             />
