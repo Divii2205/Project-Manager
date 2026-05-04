@@ -8,6 +8,7 @@ const schema = z.object({
   AUTH_RESEND_KEY: z.string().min(1),
   EMAIL_FROM: z.string().min(1),
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
+  CRON_SECRET: z.string().min(1).optional(),
   GITHUB_TOKEN: z.string().min(1).optional(),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 });
