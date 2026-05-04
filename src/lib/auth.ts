@@ -19,6 +19,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      // Single-user app: it's our own email across providers, so let Auth.js
+      // attach a Google account to the existing user row instead of throwing
+      // OAuthAccountNotLinked.
+      allowDangerousEmailAccountLinking: true,
     }),
     Resend({
       apiKey: process.env.AUTH_RESEND_KEY,
