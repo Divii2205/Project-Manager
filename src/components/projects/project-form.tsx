@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -206,21 +208,31 @@ export function ProjectForm({ mode, defaultValues, onSubmit }: ProjectFormProps)
             />
           </Field>
 
-          <Field
-            label="Progress"
-            htmlFor="progress"
-            hint="0–100"
-            error={errors.progress?.message}
-          >
-            <Input
-              id="progress"
-              type="number"
-              min={0}
-              max={100}
-              step={1}
-              {...register("progress")}
-            />
-          </Field>
+          <Controller
+            control={control}
+            name="progress"
+            render={({ field }) => {
+              const value = Math.min(100, Math.max(0, Number(field.value) || 0));
+              return (
+                <Field
+                  label="Progress"
+                  hint={`${value}%`}
+                  error={errors.progress?.message}
+                >
+                  <div className="flex h-10 items-center px-1">
+                    <Slider
+                      value={[value]}
+                      min={0}
+                      max={100}
+                      step={1}
+                      onValueChange={([v]) => field.onChange(v)}
+                      aria-label="Progress"
+                    />
+                  </div>
+                </Field>
+              );
+            }}
+          />
         </CardContent>
       </Card>
 
@@ -230,22 +242,47 @@ export function ProjectForm({ mode, defaultValues, onSubmit }: ProjectFormProps)
           <CardDescription>All dates are optional.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-3">
-          <Field label="Start date" htmlFor="startDate" error={errors.startDate?.message}>
-            <Input id="startDate" type="date" {...register("startDate")} />
+          <Field label="Start date" error={errors.startDate?.message}>
+            <Controller
+              control={control}
+              name="startDate"
+              render={({ field }) => (
+                <DatePicker
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  placeholder="Start"
+                  ariaLabel="Start date"
+                />
+              )}
+            />
           </Field>
-          <Field
-            label="Target end"
-            htmlFor="targetEndDate"
-            error={errors.targetEndDate?.message}
-          >
-            <Input id="targetEndDate" type="date" {...register("targetEndDate")} />
+          <Field label="Target end" error={errors.targetEndDate?.message}>
+            <Controller
+              control={control}
+              name="targetEndDate"
+              render={({ field }) => (
+                <DatePicker
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  placeholder="Target"
+                  ariaLabel="Target end date"
+                />
+              )}
+            />
           </Field>
-          <Field
-            label="Actual end"
-            htmlFor="actualEndDate"
-            error={errors.actualEndDate?.message}
-          >
-            <Input id="actualEndDate" type="date" {...register("actualEndDate")} />
+          <Field label="Actual end" error={errors.actualEndDate?.message}>
+            <Controller
+              control={control}
+              name="actualEndDate"
+              render={({ field }) => (
+                <DatePicker
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  placeholder="Actual"
+                  ariaLabel="Actual end date"
+                />
+              )}
+            />
           </Field>
         </CardContent>
       </Card>
