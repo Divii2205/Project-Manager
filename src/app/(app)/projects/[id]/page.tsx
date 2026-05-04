@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ProjectDetail } from "@/components/projects/project-detail";
+import { DeleteProjectButton } from "@/components/projects/delete-project-button";
 import { getProject, requireUserId } from "@/lib/projects";
 
 type PageProps = { params: { id: string } };
@@ -19,5 +20,15 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   const project = await getProject(userId, params.id);
   if (!project) notFound();
 
-  return <ProjectDetail project={project} />;
+  return (
+    <ProjectDetail
+      project={project}
+      deleteSlot={
+        <DeleteProjectButton
+          projectId={project.id}
+          projectTitle={project.title}
+        />
+      }
+    />
+  );
 }
