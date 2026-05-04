@@ -75,6 +75,36 @@ const PRIORITY_LABEL: Record<(typeof PRIORITY_VALUES)[number], string> = {
   CRITICAL: "Critical",
 };
 
+type Status = (typeof STATUS_VALUES)[number];
+
+// IDEA/PLANNING/IN_PROGRESS/SHIPPED move the slider to a sensible default;
+// PAUSED and ABANDONED are orthogonal lifecycle states, so we leave progress
+// alone for those.
+function progressForStatus(status: Status, current: number): number {
+  switch (status) {
+    case "IDEA":
+      return 0;
+    case "PLANNING":
+      return current > 0 && current < 100 ? current : 10;
+    case "IN_PROGRESS":
+      return current > 0 && current < 100 ? current : 50;
+    case "SHIPPED":
+      return 100;
+    default:
+      return current;
+  }
+}
+
+// Sliding the bar infers an active-lifecycle status, but never overwrites
+// PAUSED or ABANDONED — those are explicit user decisions.
+function statusForProgress(progress: number, current: Status): Status {
+  if (current === "PAUSED" || current === "ABANDONED") return current;
+  if (progress <= 0) return "IDEA";
+  if (progress >= 100) return "SHIPPED";
+  if (progress < 10) return "PLANNING";
+  return "IN_PROGRESS";
+}
+
 export type ProjectFormProps = {
   mode: "create" | "edit";
   defaultValues?: Partial<ProjectFormValues>;
@@ -237,7 +267,21 @@ export function ProjectForm({ mode, defaultValues, onSubmit }: ProjectFormProps)
               control={control}
               name="status"
               render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
+                <Select
+                  value={field.value}
+                  onValueChange={(val) => {
+                    const next = val as Status;
+                    field.onChange(next);
+                    const cur = Math.min(
+                      100,
+                      Math.max(0, Number(getValues("progress")) || 0),
+                    );
+                    const nextProgress = progressForStatus(next, cur);
+                    if (nextProgress !== cur) {
+                      setValue("progress", nextProgress, { shouldDirty: true });
+                    }
+                  }}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -291,7 +335,15 @@ export function ProjectForm({ mode, defaultValues, onSubmit }: ProjectFormProps)
                       min={0}
                       max={100}
                       step={1}
-                      onValueChange={([v]) => field.onChange(v)}
+                      onValueChange={([v]) => {
+                        const next = v ?? 0;
+                        field.onChange(next);
+                        const curStatus = getValues("status") as Status;
+                        const nextStatus = statusForProgress(next, curStatus);
+                        if (nextStatus !== curStatus) {
+                          setValue("status", nextStatus, { shouldDirty: true });
+                        }
+                      }}
                       aria-label="Progress"
                     />
                   </div>
