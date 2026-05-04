@@ -7,7 +7,11 @@ import { prisma } from "@/lib/prisma";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "database" },
+  session: {
+    strategy: "database",
+    maxAge: 60 * 60 * 24 * 90, // 90 days
+    updateAge: 60 * 60 * 24, // refresh expiry at most once per day
+  },
   pages: {
     signIn: "/login",
   },
