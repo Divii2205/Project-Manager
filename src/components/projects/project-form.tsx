@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+import { Github, Loader2 } from "lucide-react";
 import type { JSONContent } from "@tiptap/react";
 
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,10 @@ import {
 } from "@/components/ui/card";
 import { TiptapEditor } from "@/components/editor/tiptap-editor";
 import { TagChipInput } from "@/components/projects/tag-chip-input";
+import {
+  GithubImportDialog,
+  type ImportFields,
+} from "@/components/projects/github-import-dialog";
 import { STATUS_VALUES, PRIORITY_VALUES } from "@/lib/projects";
 
 // Form-level schema mirrors projectInputSchema but with strings for dates and
@@ -85,6 +89,8 @@ export function ProjectForm({ mode, defaultValues, onSubmit }: ProjectFormProps)
     register,
     control,
     handleSubmit,
+    setValue,
+    getValues,
     formState: { errors },
   } = useForm<ProjectFormValues>({
     resolver: zodResolver(formSchema),
@@ -118,8 +124,53 @@ export function ProjectForm({ mode, defaultValues, onSubmit }: ProjectFormProps)
   const submitLabel =
     mode === "create" ? "Create project" : "Save changes";
 
+  function applyImport(fields: ImportFields) {
+    const opts = { shouldDirty: true } as const;
+    if (fields.githubUrl) setValue("githubUrl", fields.githubUrl, opts);
+    if (fields.liveUrl && !getValues("liveUrl")) {
+      setValue("liveUrl", fields.liveUrl, opts);
+    }
+    if (fields.tagline && !getValues("tagline")) {
+      setValue("tagline", fields.tagline, opts);
+    }
+    if (fields.description && !getValues("description")) {
+      setValue("description", fields.description, opts);
+    }
+    if (fields.techStack.length > 0) {
+      const merged = Array.from(
+        new Set([...(getValues("techStack") ?? []), ...fields.techStack]),
+      ).slice(0, 20);
+      setValue("techStack", merged, opts);
+    }
+    if (fields.tagNames.length > 0) {
+      const merged = Array.from(
+        new Set([...(getValues("tagNames") ?? []), ...fields.tagNames]),
+      ).slice(0, 20);
+      setValue("tagNames", merged, opts);
+    }
+  }
+
   return (
     <form onSubmit={submit} className="space-y-6">
+      {mode === "create" ? (
+        <div className="flex flex-col gap-3 rounded-lg border border-dashed border-border bg-card/50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+              <Github className="size-4" />
+            </span>
+            <div className="space-y-0.5">
+              <p className="text-sm font-medium text-foreground">
+                Have a GitHub repo?
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Pull description, topics, and tech stack straight from it.
+              </p>
+            </div>
+          </div>
+          <GithubImportDialog onApply={applyImport} />
+        </div>
+      ) : null}
+
       <Card>
         <CardHeader>
           <CardTitle>Basics</CardTitle>
