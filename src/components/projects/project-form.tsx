@@ -77,7 +77,8 @@ const PRIORITY_LABEL: Record<(typeof PRIORITY_VALUES)[number], string> = {
 
 type Status = (typeof STATUS_VALUES)[number];
 
-// IDEA/PLANNING/IN_PROGRESS/SHIPPED move the slider to a sensible default;
+// Snap the slider to each status's canonical position so changing the dropdown
+// always *feels* like a change. The user can drag afterwards to fine-tune.
 // PAUSED and ABANDONED are orthogonal lifecycle states, so we leave progress
 // alone for those.
 function progressForStatus(status: Status, current: number): number {
@@ -85,9 +86,9 @@ function progressForStatus(status: Status, current: number): number {
     case "IDEA":
       return 0;
     case "PLANNING":
-      return current > 0 && current < 100 ? current : 10;
+      return 10;
     case "IN_PROGRESS":
-      return current > 0 && current < 100 ? current : 50;
+      return 50;
     case "SHIPPED":
       return 100;
     default:
