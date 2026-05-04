@@ -75,3 +75,42 @@
     font-feature-settings: "cv11", "ss01", "ss03";
   }
 }
+
+/* Tiptap content — used by both editor and viewer. */
+.tiptap-content .ProseMirror,
+.tiptap-content {
+  @apply text-sm leading-7 text-foreground;
+}
+.tiptap-content p {
+  @apply my-3 first:mt-0 last:mb-0;
+}
+.tiptap-content h2 {
+  @apply mb-2 mt-6 text-xl font-semibold tracking-tight;
+}
+.tiptap-content h3 {
+  @apply mb-2 mt-5 text-base font-semibold tracking-tight;
+}
+.tiptap-content ul {
+  @apply my-3 list-disc space-y-1 pl-6;
+}
+.tiptap-content ol {
+  @apply my-3 list-decimal space-y-1 pl-6;
+}
+.tiptap-content blockquote {
+  @apply my-3 border-l-2 border-primary/40 pl-4 italic text-muted-foreground;
+}
+.tiptap-content code {
+  @apply rounded bg-secondary px-1.5 py-0.5 font-mono text-xs;
+}
+.tiptap-content pre {
+  @apply my-3 overflow-x-auto rounded-lg bg-secondary p-3 font-mono text-xs;
+}
+.tiptap-content pre code {
+  @apply bg-transparent p-0;
+}
+.tiptap-content a {
+  @apply text-primary underline underline-offset-4 hover:opacity-80;
+}
+.tiptap-content hr {
+  @apply my-4 border-border;
+}
