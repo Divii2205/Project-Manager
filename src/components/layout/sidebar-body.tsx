@@ -18,14 +18,19 @@ export function SidebarBody({ onNavigate }: SidebarBodyProps) {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-16 items-center gap-2 border-b border-border px-5">
+      <Link
+        href="/dashboard"
+        onClick={onNavigate}
+        aria-label="Project Manager — go to dashboard"
+        className="flex h-16 items-center gap-2 border-b border-border px-5 transition-colors hover:bg-secondary/50 focus-visible:outline-none focus-visible:bg-secondary/60"
+      >
         <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           <Sparkles className="size-4" />
         </span>
         <span className="text-sm font-semibold tracking-tight">
           Project Manager
         </span>
-      </div>
+      </Link>
 
       <div className="px-3 pt-4">
         <Button asChild className="w-full justify-start gap-2">
