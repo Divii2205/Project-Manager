@@ -174,7 +174,6 @@ export function ProjectCard({ project, className }: ProjectCardProps) {
                 rel="noopener noreferrer"
                 aria-label={`Open ${label}`}
                 title={label}
-                onClick={(e) => e.stopPropagation()}
                 className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 <Icon className="size-3.5" />
