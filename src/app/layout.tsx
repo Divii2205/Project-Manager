@@ -17,6 +17,17 @@ export const metadata: Metadata = {
     template: "%s · Project Manager",
   },
   description: "Track your projects from idea to shipped.",
+  manifest: "/manifest.webmanifest",
+  applicationName: "Project Manager",
+  appleWebApp: {
+    capable: true,
+    title: "Projects",
+    statusBarStyle: "default",
+  },
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/icon.svg", type: "image/svg+xml" }],
+  },
 };
 
 export const viewport: Viewport = {

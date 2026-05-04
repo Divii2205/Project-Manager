@@ -52,7 +52,7 @@ export async function createProject(input: ProjectInput) {
 
   revalidatePath("/dashboard");
   revalidatePath("/projects");
-  redirect(`/projects/${project.id}`);
+  redirect(`/projects/${project.id}?toast=created`);
 }
 
 // ─── Update ───────────────────────────────────────────────────────────────────
@@ -103,7 +103,7 @@ export async function updateProject(id: string, input: ProjectInput) {
   revalidatePath("/dashboard");
   revalidatePath("/projects");
   revalidatePath(`/projects/${id}`);
-  redirect(`/projects/${id}`);
+  redirect(`/projects/${id}?toast=saved`);
 }
 
 // ─── Soft delete ──────────────────────────────────────────────────────────────
@@ -126,7 +126,7 @@ export async function softDeleteProject(id: string) {
 
   revalidatePath("/dashboard");
   revalidatePath("/projects");
-  redirect("/projects");
+  redirect("/projects?toast=deleted");
 }
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
