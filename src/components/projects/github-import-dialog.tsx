@@ -21,6 +21,7 @@ import {
 } from "@/app/actions/github-import";
 
 export type ImportFields = {
+  title: string;
   githubUrl: string;
   liveUrl: string;
   tagline: string;
@@ -60,6 +61,7 @@ export function GithubImportDialog({ onApply }: GithubImportDialogProps) {
     if (!result) return;
     const desc = result.description ?? "";
     onApply({
+      title: result.title,
       githubUrl: result.url,
       liveUrl: result.homepage ?? "",
       tagline: desc.length <= 200 ? desc : "",
@@ -133,6 +135,7 @@ export function GithubImportDialog({ onApply }: GithubImportDialogProps) {
                 Ready
               </span>
             </div>
+            <PreviewRow label="Title" value={result.title} />
             <PreviewRow
               label="Description"
               value={result.description ?? "—"}

@@ -11,6 +11,7 @@ export type GithubImportResult = {
   url: string;
   owner: string;
   repo: string;
+  title: string;
   description: string | null;
   homepage: string | null;
   topics: string[];
@@ -18,6 +19,22 @@ export type GithubImportResult = {
   defaultBranch: string;
   readme: string | null;
 };
+
+function extractTitleFromReadme(
+  readme: string | null,
+  fallback: string,
+): string {
+  if (!readme) return fallback;
+  const md = readme.match(/^#\s+(.+)$/m);
+  if (!md || !md[1]) return fallback;
+  const cleaned = md[1]
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, "") // ![alt](url)
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // [text](url) → text
+    .replace(/[`*_]+/g, "")
+    .trim();
+  if (cleaned.length === 0) return fallback;
+  return cleaned.length > 100 ? cleaned.slice(0, 100) : cleaned;
+}
 
 type RepoJson = {
   full_name: string;
@@ -112,11 +129,13 @@ export async function importFromGithub(
   const topics = Array.isArray(repoJson.topics)
     ? repoJson.topics.slice(0, 20)
     : [];
+  const title = extractTitleFromReadme(readmeText, repo);
 
   return {
     url: repoJson.html_url,
     owner,
     repo,
+    title,
     description: repoJson.description ?? null,
     homepage:
       repoJson.homepage && repoJson.homepage.length > 0

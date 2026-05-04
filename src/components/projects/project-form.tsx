@@ -126,6 +126,9 @@ export function ProjectForm({ mode, defaultValues, onSubmit }: ProjectFormProps)
 
   function applyImport(fields: ImportFields) {
     const opts = { shouldDirty: true } as const;
+    if (fields.title && !getValues("title")) {
+      setValue("title", fields.title, opts);
+    }
     if (fields.githubUrl) setValue("githubUrl", fields.githubUrl, opts);
     if (fields.liveUrl && !getValues("liveUrl")) {
       setValue("liveUrl", fields.liveUrl, opts);
@@ -152,24 +155,26 @@ export function ProjectForm({ mode, defaultValues, onSubmit }: ProjectFormProps)
 
   return (
     <form onSubmit={submit} className="space-y-6">
-      {mode === "create" ? (
-        <div className="flex flex-col gap-3 rounded-lg border border-dashed border-border bg-card/50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-              <Github className="size-4" />
-            </span>
-            <div className="space-y-0.5">
-              <p className="text-sm font-medium text-foreground">
-                Have a GitHub repo?
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Pull description, topics, and tech stack straight from it.
-              </p>
-            </div>
+      <div className="flex flex-col gap-3 rounded-lg border border-dashed border-border bg-card/50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+            <Github className="size-4" />
+          </span>
+          <div className="space-y-0.5">
+            <p className="text-sm font-medium text-foreground">
+              {mode === "create"
+                ? "Have a GitHub repo?"
+                : "Linked to a GitHub repo?"}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {mode === "create"
+                ? "Pull title, description, topics, and tech stack from it."
+                : "Re-sync any empty fields (existing values are preserved)."}
+            </p>
           </div>
-          <GithubImportDialog onApply={applyImport} />
         </div>
-      ) : null}
+        <GithubImportDialog onApply={applyImport} />
+      </div>
 
       <Card>
         <CardHeader>
