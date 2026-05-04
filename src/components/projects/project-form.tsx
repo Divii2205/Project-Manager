@@ -116,8 +116,18 @@ export function ProjectForm({ mode, defaultValues, onSubmit }: ProjectFormProps)
   });
 
   const submit = handleSubmit((values) => {
+    // ProseMirror builds mark attrs via Object.create(null); Next.js Server
+    // Actions reject null-prototype objects. Round-trip through JSON to
+    // normalize every nested object back to a plain prototype.
+    const safe: ProjectFormValues = {
+      ...values,
+      notes:
+        values.notes === null || values.notes === undefined
+          ? null
+          : JSON.parse(JSON.stringify(values.notes)),
+    };
     startTransition(async () => {
-      await onSubmit(values);
+      await onSubmit(safe);
     });
   });
 
