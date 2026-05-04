@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {
+  ArrowRight,
   CalendarClock,
   CircleDashed,
   FolderKanban,
@@ -90,9 +91,10 @@ export default async function DashboardPage() {
                 </h2>
                 <Link
                   href="/projects"
-                  className="text-xs font-medium text-primary hover:underline"
+                  className="group inline-flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:opacity-80"
                 >
                   View all
+                  <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" />
                 </Link>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
