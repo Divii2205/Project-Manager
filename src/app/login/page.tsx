@@ -24,7 +24,7 @@ export default async function LoginPage() {
           </span>
           <div className="space-y-1">
             <h1 className="text-2xl font-semibold tracking-tight">
-              Welcome back
+              Welcome
             </h1>
             <p className="text-sm text-muted-foreground">
               Sign in to keep track of your projects.
@@ -35,10 +35,6 @@ export default async function LoginPage() {
         <div className="rounded-lg border border-border bg-card p-6">
           <LoginForm />
         </div>
-
-        <p className="text-center text-xs text-muted-foreground">
-          By continuing you agree this is a personal tool — not for sharing.
-        </p>
       </div>
     </main>
   );

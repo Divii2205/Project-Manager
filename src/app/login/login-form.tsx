@@ -84,7 +84,7 @@ export function LoginForm() {
           ) : (
             <Mail className="size-4" />
           )}
-          Send magic link
+          Send link
         </Button>
       </form>
     </div>
