@@ -23,11 +23,11 @@ export function StatusBreakdown({ byStatus, className }: StatusBreakdownProps) {
   return (
     <div
       className={cn(
-        "rounded-lg border border-border bg-card p-5",
+        "rounded-xl border border-border bg-card p-5 shadow-xs",
         className,
       )}
     >
-      <h3 className="mb-4 text-sm font-semibold text-foreground">
+      <h3 className="mb-4 text-sm font-semibold tracking-tight text-foreground">
         By status
       </h3>
       <ul className="space-y-2.5">
@@ -43,9 +43,9 @@ export function StatusBreakdown({ byStatus, className }: StatusBreakdownProps) {
                   {total > 0 ? ` · ${pct}%` : null}
                 </span>
               </div>
-              <div className="h-1 w-full overflow-hidden rounded-full bg-secondary">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
                 <div
-                  className="h-full rounded-full bg-primary/60 transition-all"
+                  className="h-full rounded-full bg-gradient-to-r from-lavender-500/80 to-lavender-400/70 transition-all duration-500 ease-out"
                   style={{ width: `${pct}%` }}
                 />
               </div>

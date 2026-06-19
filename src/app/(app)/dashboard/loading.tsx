@@ -13,9 +13,9 @@ export default function DashboardLoading() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="rounded-lg border border-border bg-card p-5">
+          <div key={i} className="rounded-xl border border-border bg-card shadow-xs p-5">
             <div className="flex items-center gap-4">
-              <Skeleton className="size-10 rounded-lg" />
+              <Skeleton className="size-11 rounded-xl" />
               <div className="space-y-2">
                 <Skeleton className="h-7 w-12" />
                 <Skeleton className="h-3 w-24" />
@@ -25,16 +25,13 @@ export default function DashboardLoading() {
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        <div className="space-y-4">
-          <Skeleton className="h-5 w-40" />
-          <div className="grid gap-4 sm:grid-cols-2">
-            {[0, 1, 2, 3].map((i) => (
-              <ProjectCardSkeleton key={i} />
-            ))}
-          </div>
+      <div className="space-y-4">
+        <Skeleton className="h-5 w-40" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <ProjectCardSkeleton key={i} />
+          ))}
         </div>
-        <Skeleton className="h-72 w-full rounded-lg" />
       </div>
     </div>
   );
@@ -42,7 +39,7 @@ export default function DashboardLoading() {
 
 function ProjectCardSkeleton() {
   return (
-    <div className="space-y-4 rounded-lg border border-border bg-card p-5">
+    <div className="space-y-4 rounded-xl border border-border bg-card shadow-xs p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 space-y-2">
           <Skeleton className="h-5 w-3/4" />

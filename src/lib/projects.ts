@@ -1,8 +1,9 @@
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import type { Priority, Project, ProjectStatus, ProjectTag, Tag } from "@prisma/client";
 
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export type ProjectWithTags = Project & {
@@ -11,11 +12,11 @@ export type ProjectWithTags = Project & {
 
 // ─── Auth helper ──────────────────────────────────────────────────────────────
 
-export async function requireUserId(): Promise<string> {
-  const session = await auth();
+export const requireUserId = cache(async (): Promise<string> => {
+  const session = await getSession();
   if (!session?.user?.id) redirect("/login");
   return session.user.id;
-}
+});
 
 // ─── Schemas ──────────────────────────────────────────────────────────────────
 
@@ -170,14 +171,16 @@ export async function listProjects(
   });
 }
 
-export async function getProject(userId: string, id: string) {
+// Cached per-request: generateMetadata and the page component both fetch the
+// same project — dedupe so it's a single round-trip to Neon.
+export const getProject = cache(async (userId: string, id: string) => {
   return prisma.project.findFirst({
     where: { id, userId, deletedAt: null },
     include: {
       projectTags: { include: { tag: true } },
     },
   });
-}
+});
 
 export type DashboardStats = {
   total: number;

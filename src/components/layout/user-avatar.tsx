@@ -20,7 +20,7 @@ function initials(name?: string | null, email?: string | null) {
 
 export function UserAvatar({ name, email, image, className }: UserAvatarProps) {
   const baseClasses = cn(
-    "flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary text-xs font-medium text-foreground",
+    "flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary text-xs font-medium text-foreground ring-1 ring-inset ring-border",
     className,
   );
 

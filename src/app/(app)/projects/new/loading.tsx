@@ -10,7 +10,7 @@ export default function NewProjectLoading() {
       {[0, 1, 2, 3, 4].map((i) => (
         <div
           key={i}
-          className="rounded-lg border border-border bg-card p-6"
+          className="rounded-xl border border-border bg-card shadow-xs p-6"
         >
           <Skeleton className="mb-4 h-5 w-32" />
           <div className="space-y-3">

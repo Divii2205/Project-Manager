@@ -14,7 +14,6 @@ import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { ProjectCard } from "@/components/project-card";
 import { StatCard } from "@/components/dashboard/stat-card";
-import { StatusBreakdown } from "@/components/dashboard/status-breakdown";
 import {
   getDashboardStats,
   getRecentProjects,
@@ -83,53 +82,49 @@ export default async function DashboardPage() {
             />
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-            <section className="space-y-4">
-              <div className="flex items-end justify-between">
-                <h2 className="text-base font-semibold tracking-tight">
-                  Recently updated
-                </h2>
-                <Link
-                  href="/projects"
-                  className="group inline-flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:opacity-80"
-                >
-                  View all
-                  <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" />
-                </Link>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {recent.map((p) => (
-                  <ProjectCard
-                    key={p.id}
-                    project={{
-                      id: p.id,
-                      title: p.title,
-                      tagline: p.tagline,
-                      description: p.description,
-                      status: p.status,
-                      priority: p.priority,
-                      techStack: p.techStack,
-                      progress: p.progress,
-                      startDate: p.startDate,
-                      targetEndDate: p.targetEndDate,
-                      githubUrl: p.githubUrl,
-                      liveUrl: p.liveUrl,
-                      designUrl: p.designUrl,
-                      docsUrl: p.docsUrl,
-                      tags: p.projectTags.map((pt) => ({
-                        id: pt.tag.id,
-                        name: pt.tag.name,
-                        color: pt.tag.color,
-                      })),
-                      updatedAt: p.updatedAt,
-                    }}
-                  />
-                ))}
-              </div>
-            </section>
-
-            <StatusBreakdown byStatus={stats.byStatus} />
-          </div>
+          <section className="space-y-4">
+            <div className="flex items-end justify-between">
+              <h2 className="text-base font-semibold tracking-tight">
+                Recently updated
+              </h2>
+              <Link
+                href="/projects"
+                className="group inline-flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:opacity-80"
+              >
+                View all
+                <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" />
+              </Link>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {recent.map((p) => (
+                <ProjectCard
+                  key={p.id}
+                  project={{
+                    id: p.id,
+                    title: p.title,
+                    tagline: p.tagline,
+                    description: p.description,
+                    status: p.status,
+                    priority: p.priority,
+                    techStack: p.techStack,
+                    progress: p.progress,
+                    startDate: p.startDate,
+                    targetEndDate: p.targetEndDate,
+                    githubUrl: p.githubUrl,
+                    liveUrl: p.liveUrl,
+                    designUrl: p.designUrl,
+                    docsUrl: p.docsUrl,
+                    tags: p.projectTags.map((pt) => ({
+                      id: pt.tag.id,
+                      name: pt.tag.name,
+                      color: pt.tag.color,
+                    })),
+                    updatedAt: p.updatedAt,
+                  }}
+                />
+              ))}
+            </div>
+          </section>
         </>
       )}
     </div>

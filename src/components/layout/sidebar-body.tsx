@@ -22,9 +22,9 @@ export function SidebarBody({ onNavigate }: SidebarBodyProps) {
         href="/dashboard"
         onClick={onNavigate}
         aria-label="Project Manager — go to dashboard"
-        className="flex h-16 items-center gap-2 border-b border-border px-5 transition-colors hover:bg-secondary/50 focus-visible:outline-none focus-visible:bg-secondary/60"
+        className="flex h-16 items-center gap-2.5 border-b border-border px-5 transition-colors hover:bg-secondary/50 focus-visible:outline-none focus-visible:bg-secondary/60"
       >
-        <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+        <span className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-lavender-500 to-lavender-600 text-primary-foreground shadow-sm shadow-primary/20 ring-1 ring-inset ring-white/10">
           <Sparkles className="size-4" />
         </span>
         <span className="text-sm font-semibold tracking-tight">

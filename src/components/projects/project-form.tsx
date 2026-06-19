@@ -196,9 +196,9 @@ export function ProjectForm({ mode, defaultValues, onSubmit }: ProjectFormProps)
 
   return (
     <form onSubmit={submit} className="space-y-6">
-      <div className="flex flex-col gap-3 rounded-lg border border-dashed border-border bg-card/50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 rounded-xl border border-dashed border-border bg-card/50 px-4 py-3 shadow-xs sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 text-primary ring-1 ring-inset ring-primary/15">
             <Github className="size-4" />
           </span>
           <div className="space-y-0.5">
@@ -523,7 +523,7 @@ export function ProjectForm({ mode, defaultValues, onSubmit }: ProjectFormProps)
         </CardContent>
       </Card>
 
-      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+      <div className="sticky bottom-0 z-10 -mx-4 flex flex-col-reverse gap-3 border-t border-border bg-background/80 px-4 py-4 backdrop-blur sm:mx-0 sm:flex-row sm:justify-end sm:rounded-xl sm:border sm:px-4 sm:shadow-sm">
         <Button
           type="button"
           variant="outline"

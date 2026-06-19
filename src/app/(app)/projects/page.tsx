@@ -3,7 +3,6 @@ import type { Priority, ProjectStatus } from "@prisma/client";
 import { FolderKanban, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { ProjectCard } from "@/components/project-card";
 import { ProjectsFilters } from "@/components/projects/projects-filters";
@@ -33,20 +32,15 @@ export default async function ProjectsPage({
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Projects"
-        description="Everything you're building, in one place."
-        actions={
-          <Button asChild>
-            <Link href="/projects/new">
-              <Plus className="size-4" />
-              New project
-            </Link>
-          </Button>
-        }
-      />
-
-      <ProjectsFilters />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <ProjectsFilters className="flex-1" />
+        <Button asChild className="sm:shrink-0">
+          <Link href="/projects/new">
+            <Plus className="size-4" />
+            New project
+          </Link>
+        </Button>
+      </div>
 
       {projects.length === 0 ? (
         hasActiveFilters ? (

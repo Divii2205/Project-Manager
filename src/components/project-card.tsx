@@ -71,19 +71,19 @@ export function ProjectCard({ project, className }: ProjectCardProps) {
   return (
     <article
       className={cn(
-        "group relative flex h-full flex-col gap-4 rounded-lg border border-border bg-card p-5",
-        "transition-all duration-200 ease-out",
-        "hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-sm",
-        "focus-within:border-primary/40 focus-within:shadow-sm",
+        "group relative flex h-full flex-col gap-4 rounded-xl border border-border bg-card p-5 shadow-xs",
+        "transition-all duration-300 ease-out",
+        "hover:-translate-y-1 hover:border-primary/40 hover:shadow-md",
+        "focus-within:border-primary/40 focus-within:shadow-md",
         className,
       )}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
-          <h3 className="truncate text-base font-semibold tracking-tight text-foreground">
+          <h3 className="truncate text-base font-semibold tracking-tight text-foreground transition-colors group-hover:text-primary">
             <Link
               href={`/projects/${project.id}`}
-              className="outline-none before:absolute before:inset-0 before:rounded-lg focus-visible:before:ring-2 focus-visible:before:ring-ring focus-visible:before:ring-offset-2 focus-visible:before:ring-offset-background"
+              className="outline-none before:absolute before:inset-0 before:rounded-xl focus-visible:before:ring-2 focus-visible:before:ring-ring focus-visible:before:ring-offset-2 focus-visible:before:ring-offset-background"
             >
               {project.title}
             </Link>
@@ -148,7 +148,7 @@ export function ProjectCard({ project, className }: ProjectCardProps) {
         </div>
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
           <div
-            className="h-full rounded-full bg-primary transition-all"
+            className="h-full rounded-full bg-gradient-to-r from-lavender-500 to-lavender-400 transition-all duration-500 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>

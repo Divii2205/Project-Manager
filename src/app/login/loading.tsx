@@ -9,7 +9,7 @@ export default function LoginLoading() {
           <Skeleton className="h-7 w-40" />
           <Skeleton className="h-4 w-64" />
         </div>
-        <div className="space-y-3 rounded-lg border border-border bg-card p-6">
+        <div className="space-y-3 rounded-xl border border-border bg-card shadow-xs p-6">
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-10 w-full" />

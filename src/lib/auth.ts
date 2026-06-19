@@ -1,3 +1,4 @@
+import { cache } from "react";
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import Resend from "next-auth/providers/resend";
@@ -38,3 +39,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
 });
+
+// Per-request memoized session. Layout, generateMetadata, and the page all
+// need the session within a single render — without this, each call is a
+// separate Session+User round-trip to Neon. React cache() dedupes them so the
+// query runs once per request.
+export const getSession = cache(() => auth());

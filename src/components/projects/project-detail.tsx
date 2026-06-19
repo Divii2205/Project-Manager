@@ -1,18 +1,18 @@
 import Link from "next/link";
 import {
-  CalendarClock,
   ExternalLink,
   FileText,
+  Flag,
   Github,
   Globe,
   Layers,
   Palette,
   Pencil,
-  Tag as TagIcon,
 } from "lucide-react";
-import { format, formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import type { Project, ProjectTag, Tag } from "@prisma/client";
 
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/status-badge";
 import { PriorityDot } from "@/components/priority-dot";
@@ -36,18 +36,20 @@ export function ProjectDetail({ project, deleteSlot }: ProjectDetailProps) {
       project.notes !== null &&
       Object.keys(project.notes).length === 0);
 
-  const hasLinks =
+  const hasTech = project.techStack.length > 0;
+  const hasLinks = Boolean(
     project.githubUrl ||
-    project.liveUrl ||
-    project.designUrl ||
-    project.docsUrl;
+      project.liveUrl ||
+      project.designUrl ||
+      project.docsUrl,
+  );
 
   return (
-    <div className="space-y-8">
-      <header className="space-y-4">
+    <div className="mx-auto max-w-4xl space-y-8">
+      <header className="space-y-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <StatusBadge status={project.status} />
               <span className="text-xs text-muted-foreground">
                 Updated {formatDistanceToNow(project.updatedAt, { addSuffix: true })}
@@ -57,12 +59,12 @@ export function ProjectDetail({ project, deleteSlot }: ProjectDetailProps) {
               {project.title}
             </h1>
             {project.tagline ? (
-              <p className="max-w-2xl text-base text-muted-foreground">
+              <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
                 {project.tagline}
               </p>
             ) : null}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <Button asChild variant="outline">
               <Link href={`/projects/${project.id}/edit`}>
                 <Pencil className="size-4" />
@@ -76,106 +78,71 @@ export function ProjectDetail({ project, deleteSlot }: ProjectDetailProps) {
         <ProgressBar progress={project.progress} />
       </header>
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
-        <div className="min-w-0 space-y-8">
-          {project.description ? (
-            <Section title="Description">
-              <p className="whitespace-pre-line text-sm leading-7 text-foreground">
-                {project.description}
-              </p>
-            </Section>
-          ) : null}
+      {/* Meta boxes */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Panel title="Priority" icon={Flag} className="sm:col-span-2">
+          <PriorityDot priority={project.priority} showLabel />
+        </Panel>
 
-          <Section title="Notes">
-            {hasNotes ? (
-              <TiptapViewer content={project.notes as JSONContent} />
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                No notes yet. Edit the project to start capturing ideas.
-              </p>
-            )}
-          </Section>
-        </div>
+        {/* Tech stack & links sit side by side; whichever is present alone
+            spans the full width. */}
+        {hasTech ? (
+          <Panel
+            title="Tech stack"
+            icon={Layers}
+            className={cn(!hasLinks && "sm:col-span-2")}
+          >
+            <div className="flex flex-wrap gap-1.5">
+              {project.techStack.map((tech) => (
+                <span
+                  key={tech}
+                  className="rounded-md bg-secondary px-2.5 py-1 text-xs font-medium text-foreground"
+                >
+                  {tech}
+                </span>
+              ))}
+            </div>
+          </Panel>
+        ) : null}
 
-        <aside className="space-y-6">
-          <MetaPanel title="Priority" icon={Layers}>
-            <PriorityDot priority={project.priority} showLabel />
-          </MetaPanel>
-
-          <MetaPanel title="Timeline" icon={CalendarClock}>
-            <ul className="space-y-1.5 text-sm">
-              <DateLine label="Start" value={project.startDate} />
-              <DateLine label="Target end" value={project.targetEndDate} />
-              <DateLine label="Actual end" value={project.actualEndDate} />
-            </ul>
-          </MetaPanel>
-
-          {project.techStack.length > 0 ? (
-            <MetaPanel title="Tech stack" icon={Layers}>
-              <div className="flex flex-wrap gap-1.5">
-                {project.techStack.map((tech) => (
-                  <span
-                    key={tech}
-                    className="rounded-md bg-secondary px-2 py-0.5 text-xs text-foreground"
-                  >
-                    {tech}
-                  </span>
-                ))}
-              </div>
-            </MetaPanel>
-          ) : null}
-
-          {project.projectTags.length > 0 ? (
-            <MetaPanel title="Tags" icon={TagIcon}>
-              <div className="flex flex-wrap gap-1.5">
-                {project.projectTags.map(({ tag }) => (
-                  <span
-                    key={tag.id}
-                    className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium"
-                    style={{
-                      backgroundColor: `${tag.color}1F`,
-                      color: tag.color,
-                    }}
-                  >
-                    <span
-                      className="size-1.5 rounded-full"
-                      style={{ backgroundColor: tag.color }}
-                    />
-                    {tag.name}
-                  </span>
-                ))}
-              </div>
-            </MetaPanel>
-          ) : null}
-
-          {hasLinks ? (
-            <MetaPanel title="Links" icon={ExternalLink}>
-              <ul className="space-y-1">
-                <LinkRow
-                  href={project.githubUrl}
-                  label="GitHub"
-                  icon={Github}
-                />
-                <LinkRow
-                  href={project.liveUrl}
-                  label="Live"
-                  icon={Globe}
-                />
-                <LinkRow
-                  href={project.designUrl}
-                  label="Design"
-                  icon={Palette}
-                />
-                <LinkRow
-                  href={project.docsUrl}
-                  label="Docs"
-                  icon={FileText}
-                />
-              </ul>
-            </MetaPanel>
-          ) : null}
-        </aside>
+        {hasLinks ? (
+          <Panel
+            title="Links"
+            icon={ExternalLink}
+            className={cn(!hasTech && "sm:col-span-2")}
+          >
+            <div className="flex flex-wrap gap-2">
+              <LinkButton href={project.githubUrl} label="GitHub" icon={Github} />
+              <LinkButton href={project.liveUrl} label="Live" icon={Globe} />
+              <LinkButton href={project.designUrl} label="Design" icon={Palette} />
+              <LinkButton href={project.docsUrl} label="Docs" icon={FileText} />
+            </div>
+          </Panel>
+        ) : null}
       </div>
+
+      {/* Description & notes — clearly separated content cards. */}
+      <ContentCard title="Description">
+        {project.description ? (
+          <p className="whitespace-pre-line text-sm leading-7 text-foreground">
+            {project.description}
+          </p>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            No description yet. Edit the project to add one.
+          </p>
+        )}
+      </ContentCard>
+
+      <ContentCard title="Notes">
+        {hasNotes ? (
+          <TiptapViewer content={project.notes as JSONContent} />
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            No notes yet. Edit the project to start capturing ideas.
+          </p>
+        )}
+      </ContentCard>
     </div>
   );
 }
@@ -190,7 +157,7 @@ function ProgressBar({ progress }: { progress: number }) {
       </div>
       <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
         <div
-          className="h-full rounded-full bg-primary transition-all"
+          className="h-full rounded-full bg-gradient-to-r from-lavender-500 to-lavender-400 transition-all duration-500 ease-out"
           style={{ width: `${clamped}%` }}
         />
       </div>
@@ -198,34 +165,25 @@ function ProgressBar({ progress }: { progress: number }) {
   );
 }
 
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="space-y-3">
-      <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {title}
-      </h2>
-      {children}
-    </section>
-  );
-}
-
-function MetaPanel({
+/** Compact meta box (Priority / Tech stack / Links). */
+function Panel({
   title,
   icon: Icon,
+  className,
   children,
 }: {
   title: string;
   icon: React.ComponentType<{ className?: string }>;
+  className?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-lg border border-border bg-card p-4">
+    <div
+      className={cn(
+        "rounded-xl border border-border bg-card p-5 shadow-xs",
+        className,
+      )}
+    >
       <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         <Icon className="size-3.5" />
         {title}
@@ -235,18 +193,25 @@ function MetaPanel({
   );
 }
 
-function DateLine({ label, value }: { label: string; value: Date | null }) {
+/** Larger separated section for long-form content (Description / Notes). */
+function ContentCard({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
-    <li className="flex items-center justify-between">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="text-foreground">
-        {value ? format(value, "MMM d, yyyy") : "—"}
-      </span>
-    </li>
+    <section className="space-y-3 rounded-xl border border-border bg-card p-6 shadow-xs">
+      <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {title}
+      </h2>
+      {children}
+    </section>
   );
 }
 
-function LinkRow({
+function LinkButton({
   href,
   label,
   icon: Icon,
@@ -257,19 +222,15 @@ function LinkRow({
 }) {
   if (!href) return null;
   return (
-    <li>
-      <a
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="group flex items-center justify-between rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-secondary"
-      >
-        <span className="flex items-center gap-2 text-foreground">
-          <Icon className="size-4 text-muted-foreground" />
-          {label}
-        </span>
-        <ExternalLink className="size-3.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
-      </a>
-    </li>
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-secondary"
+    >
+      <Icon className="size-4 text-muted-foreground transition-colors group-hover:text-foreground" />
+      {label}
+      <ExternalLink className="size-3 text-muted-foreground" />
+    </a>
   );
 }
