@@ -124,6 +124,12 @@
     @apply border-border;
   }
 
+  html {
+    /* A row expanding can cross the scroll threshold. Reserving the gutter
+       stops that from jogging the whole content column sideways on hover. */
+    scrollbar-gutter: stable;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     text-rendering: optimizeLegibility;
