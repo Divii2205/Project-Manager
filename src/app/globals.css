@@ -16,7 +16,7 @@
 
 @layer base {
   :root {
-    --background: 48 15% 94%;         /* #F1F0EC  paper   */
+    --background: 48 12% 96%;         /* #F6F5F2  paper   */
     --foreground: 36 11% 9%;          /* #1A1815  ink     */
 
     --card: 0 0% 100%;                /* surfaces sit above the ground */

@@ -65,6 +65,21 @@ export function ProjectDetail({ project, deleteSlot }: ProjectDetailProps) {
 
       <div className="grid gap-x-14 gap-y-10 lg:grid-cols-[minmax(0,1fr)_17rem]">
         <div className="min-w-0 space-y-10">
+          {project.techStack.length > 0 ? (
+            <Prose title="Tech stack">
+              <ul className="flex flex-wrap gap-1.5">
+                {project.techStack.map((tech) => (
+                  <li
+                    key={tech}
+                    className="rounded-sm bg-secondary px-2 py-1 text-[0.8125rem] text-foreground"
+                  >
+                    {tech}
+                  </li>
+                ))}
+              </ul>
+            </Prose>
+          ) : null}
+
           <Prose title="Description">
             {project.description ? (
               <p className="max-w-prose whitespace-pre-line text-[0.9375rem] leading-[1.7] text-foreground">
@@ -136,21 +151,6 @@ export function ProjectDetail({ project, deleteSlot }: ProjectDetailProps) {
             <Row label="Completed">
               <Value date={project.actualEndDate} />
             </Row>
-
-            {project.techStack.length > 0 ? (
-              <Row label="Tech stack" align="start">
-                <div className="flex flex-wrap gap-1">
-                  {project.techStack.map((tech) => (
-                    <span
-                      key={tech}
-                      className="rounded-sm bg-secondary px-1.5 py-0.5 text-xs text-foreground"
-                    >
-                      {tech}
-                    </span>
-                  ))}
-                </div>
-              </Row>
-            ) : null}
 
             {project.projectTags.length > 0 ? (
               <Row label="Tags" align="start">

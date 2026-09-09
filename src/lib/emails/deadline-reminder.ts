@@ -25,7 +25,7 @@ export type RenderedEmail = {
 
 /* Palette matches the app: paper ground, warm ink, pine accent. Email clients
    need inline styles, so the values are literals rather than tokens. */
-const PAPER = "#F1F0EC";
+const PAPER = "#F6F5F2";
 const SURFACE = "#FFFFFF";
 const INK = "#1A1815";
 const MUTED = "#6B6862";

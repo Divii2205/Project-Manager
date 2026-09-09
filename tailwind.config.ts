@@ -62,16 +62,17 @@ const config: Config = {
         },
       },
 
-      /* Sharp and differentiated: chips → surfaces → overlays. Nothing in the
-         app is soft-cornered except the avatar. */
+      /* Crisp and differentiated: chips → surfaces → overlays. Enough radius
+         to take the hard edge off a rectangle, never enough to read as soft.
+         Nothing in the app is round except the avatar. */
       borderRadius: {
         none: "0",
-        sm: "2px",
-        DEFAULT: "3px",
-        md: "3px",
-        lg: "4px",
-        xl: "6px",
-        "2xl": "8px",
+        sm: "3px",
+        DEFAULT: "4px",
+        md: "4px",
+        lg: "6px",
+        xl: "8px",
+        "2xl": "10px",
         full: "9999px",
       },
 

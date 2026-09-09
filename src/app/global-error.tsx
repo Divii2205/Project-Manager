@@ -24,7 +24,7 @@ export default function GlobalError({
           alignItems: "center",
           padding: "1.5rem",
           margin: 0,
-          background: "#F1F0EC",
+          background: "#F6F5F2",
           color: "#1A1815",
           fontFamily:
             "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",

@@ -9,11 +9,14 @@ export default function DashboardLoading() {
         <Skeleton className="h-9 w-32" />
       </div>
 
-      <div className="flex flex-wrap gap-x-10 gap-y-4 border-y border-border py-4">
-        {[0, 1, 2, 3, 4].map((i) => (
-          <div key={i} className="space-y-2">
-            <Skeleton className="h-6 w-8" />
-            <Skeleton className="h-3 w-16" />
+      <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1.5 border-y border-border py-2.5">
+        {[48, 62, 50, 82, 52].map((w, i) => (
+          <div
+            key={i}
+            className="flex h-[0.9375rem] flex-row-reverse items-center gap-1.5"
+          >
+            <Skeleton className="h-3" style={{ width: `${w}px` }} />
+            <Skeleton className="h-3.5 w-4" />
           </div>
         ))}
       </div>

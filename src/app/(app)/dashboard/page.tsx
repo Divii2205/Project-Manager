@@ -61,7 +61,7 @@ export default async function DashboardPage() {
         }
       />
 
-      <dl className="flex flex-wrap gap-x-10 gap-y-4 border-y border-border py-4">
+      <dl className="flex flex-wrap items-baseline gap-x-6 gap-y-1.5 border-y border-border py-2.5">
         <Figure label="tracked" value={stats.total} />
         <Figure label="in progress" value={stats.inProgress} />
         <Figure label="shipped" value={stats.shipped} />
@@ -112,11 +112,11 @@ function Figure({
   tone?: "default" | "signal" | "alert" | "quiet";
 }) {
   return (
-    <div className="flex flex-col-reverse gap-0.5">
-      <dt className="text-xs text-muted-foreground">{label}</dt>
+    <div className="flex flex-row-reverse items-baseline gap-1.5">
+      <dt className="text-xs leading-none text-muted-foreground">{label}</dt>
       <dd
         className={cn(
-          "tabular text-2xl font-semibold leading-none tracking-tighter",
+          "tabular text-[0.9375rem] font-semibold leading-none tracking-tight",
           tone === "signal" && "text-signal",
           tone === "alert" && "text-destructive",
           tone === "quiet" && "text-muted-foreground/60",
