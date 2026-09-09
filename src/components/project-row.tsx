@@ -264,35 +264,41 @@ function RowDetail({ project }: { project: ProjectRowData }) {
             </p>
           ) : null}
 
+          {/* Tech stack and tags each get their own line. Being on separate
+              lines is what tells them apart, so neither needs a label or a
+              divider between them. */}
           {hasChips ? (
-            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
-              {project.techStack.map((item) => (
-                <span
-                  key={item}
-                  className="rounded-sm border border-border bg-secondary/50 px-1.5 py-0.5 text-[0.6875rem] text-muted-foreground"
-                >
-                  {item}
-                </span>
-              ))}
-
-              {/* Separates the two kinds of chip without labelling either. */}
-              {project.techStack.length > 0 && project.tags.length > 0 ? (
-                <span aria-hidden className="h-3 w-px bg-border" />
+            <div className="space-y-1.5">
+              {project.techStack.length > 0 ? (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {project.techStack.map((item) => (
+                    <span
+                      key={item}
+                      className="rounded-sm border border-border bg-secondary/50 px-1.5 py-0.5 text-[0.6875rem] text-muted-foreground"
+                    >
+                      {item}
+                    </span>
+                  ))}
+                </div>
               ) : null}
 
-              {project.tags.map((tag) => (
-                <span
-                  key={tag.id}
-                  className="inline-flex items-center gap-1 text-[0.6875rem] text-muted-foreground"
-                >
-                  <span
-                    aria-hidden
-                    className="size-1.5 rounded-sm"
-                    style={{ backgroundColor: tag.color }}
-                  />
-                  {tag.name}
-                </span>
-              ))}
+              {project.tags.length > 0 ? (
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                  {project.tags.map((tag) => (
+                    <span
+                      key={tag.id}
+                      className="inline-flex items-center gap-1 text-[0.6875rem] text-muted-foreground"
+                    >
+                      <span
+                        aria-hidden
+                        className="size-1.5 rounded-sm"
+                        style={{ backgroundColor: tag.color }}
+                      />
+                      {tag.name}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
             </div>
           ) : null}
         </div>
