@@ -4,27 +4,37 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
+/* Focus is handled globally by a solid pine `:focus-visible` outline, so no
+   variant here paints its own ring. */
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0",
+  cn(
+    "inline-flex select-none items-center justify-center gap-1.5 whitespace-nowrap rounded-sm",
+    "text-[0.8125rem] font-medium tracking-tight",
+    "transition-colors duration-150",
+    "disabled:pointer-events-none disabled:opacity-45",
+    "[&_svg]:size-[0.9375rem] [&_svg]:shrink-0",
+  ),
   {
     variants: {
       variant: {
-        default:
-          "bg-primary text-primary-foreground shadow-sm hover:bg-lavender-600 dark:hover:bg-lavender-400",
+        default: "bg-primary text-primary-foreground hover:bg-primary/[0.88]",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          "bg-secondary text-secondary-foreground hover:bg-accent",
         outline:
-          "border border-border bg-background hover:bg-secondary hover:text-secondary-foreground",
-        ghost: "hover:bg-secondary hover:text-secondary-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+          "border border-input bg-card text-foreground hover:border-foreground/25 hover:bg-secondary/60",
+        ghost: "text-muted-foreground hover:bg-secondary hover:text-foreground",
+        link: "text-primary underline decoration-primary/30 underline-offset-[3px] hover:decoration-primary",
         destructive:
-          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/[0.88]",
+        danger:
+          "border border-destructive/35 bg-card text-destructive hover:border-destructive/60 hover:bg-destructive/[0.07]",
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-8 rounded-md px-3 text-xs",
-        lg: "h-12 rounded-lg px-6 text-base",
-        icon: "h-10 w-10",
+        default: "h-9 px-3.5",
+        sm: "h-8 px-2.5 text-xs",
+        lg: "h-10 px-5 text-sm",
+        icon: "size-9",
+        "icon-sm": "size-8 [&_svg]:size-3.5",
       },
     },
     defaultVariants: {

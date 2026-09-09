@@ -1,18 +1,23 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import type { Priority, ProjectStatus } from "@prisma/client";
-import { FolderKanban, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
-import { ProjectCard } from "@/components/project-card";
+import { ProjectRow, ProjectRowHeader } from "@/components/project-row";
 import { ProjectsFilters } from "@/components/projects/projects-filters";
+import { PRIORITY_ORDER, STATUS_ORDER } from "@/lib/lifecycle";
 import {
-  PRIORITY_VALUES,
-  STATUS_VALUES,
+  countProjects,
   listProjects,
   requireUserId,
+  toProjectRow,
   type ListProjectsParams,
 } from "@/lib/projects";
+
+export const metadata: Metadata = { title: "Projects" };
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -23,41 +28,47 @@ export default async function ProjectsPage({
 }) {
   const userId = await requireUserId();
   const filters = parseFilters(searchParams);
-  const projects = await listProjects(userId, filters);
+  const [projects, total] = await Promise.all([
+    listProjects(userId, filters),
+    countProjects(userId),
+  ]);
 
-  const hasActiveFilters =
+  const filtered =
     filters.q !== undefined ||
     filters.status !== undefined ||
     filters.priority !== undefined;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <ProjectsFilters className="flex-1" />
-        <Button asChild className="sm:shrink-0">
-          <Link href="/projects/new">
-            <Plus className="size-4" />
-            New project
-          </Link>
-        </Button>
-      </div>
+    <div className="space-y-8">
+      <PageHeader
+        title="Projects"
+        description={summarise(projects.length, total, filtered)}
+        actions={
+          <Button asChild>
+            <Link href="/projects/new">
+              <Plus />
+              New project
+            </Link>
+          </Button>
+        }
+      />
+
+      <ProjectsFilters />
 
       {projects.length === 0 ? (
-        hasActiveFilters ? (
+        filtered ? (
           <EmptyState
-            icon={FolderKanban}
-            title="No projects match these filters"
-            description="Try clearing a filter or broadening your search."
+            title="No projects match"
+            description="Widen the search, or clear the stage and priority filters to see everything again."
           />
         ) : (
           <EmptyState
-            icon={FolderKanban}
             title="No projects yet"
-            description="Create your first project to start tracking it here."
+            description="Add the first one and it will show up here with its stage, progress, and target date."
             action={
               <Button asChild>
                 <Link href="/projects/new">
-                  <Plus className="size-4" />
+                  <Plus />
                   New project
                 </Link>
               </Button>
@@ -65,38 +76,24 @@ export default async function ProjectsPage({
           />
         )
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {projects.map((p) => (
-            <ProjectCard
-              key={p.id}
-              project={{
-                id: p.id,
-                title: p.title,
-                tagline: p.tagline,
-                description: p.description,
-                status: p.status,
-                priority: p.priority,
-                techStack: p.techStack,
-                progress: p.progress,
-                startDate: p.startDate,
-                targetEndDate: p.targetEndDate,
-                githubUrl: p.githubUrl,
-                liveUrl: p.liveUrl,
-                designUrl: p.designUrl,
-                docsUrl: p.docsUrl,
-                tags: p.projectTags.map((pt) => ({
-                  id: pt.tag.id,
-                  name: pt.tag.name,
-                  color: pt.tag.color,
-                })),
-                updatedAt: p.updatedAt,
-              }}
-            />
-          ))}
+        <div>
+          <ProjectRowHeader />
+          <ul className="divide-y divide-border border-b border-border">
+            {projects.map((p) => (
+              <ProjectRow key={p.id} project={toProjectRow(p)} />
+            ))}
+          </ul>
         </div>
       )}
     </div>
   );
+}
+
+function summarise(shown: number, total: number, filtered: boolean): string {
+  if (total === 0) return "Nothing tracked yet.";
+  const noun = total === 1 ? "project" : "projects";
+  if (!filtered) return `${total} ${noun}.`;
+  return `${shown} of ${total} ${noun} match.`;
 }
 
 function parseFilters(params: SearchParams): ListProjectsParams {
@@ -106,12 +103,12 @@ function parseFilters(params: SearchParams): ListProjectsParams {
   const sortRaw = pickString(params.sort);
 
   const status =
-    statusRaw && (STATUS_VALUES as readonly string[]).includes(statusRaw)
+    statusRaw && (STATUS_ORDER as readonly string[]).includes(statusRaw)
       ? (statusRaw as ProjectStatus)
       : undefined;
 
   const priority =
-    priorityRaw && (PRIORITY_VALUES as readonly string[]).includes(priorityRaw)
+    priorityRaw && (PRIORITY_ORDER as readonly string[]).includes(priorityRaw)
       ? (priorityRaw as Priority)
       : undefined;
 

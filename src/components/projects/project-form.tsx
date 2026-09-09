@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Github, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import type { JSONContent } from "@tiptap/react";
 
 import { Button } from "@/components/ui/button";
@@ -21,33 +21,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Section } from "@/components/section";
 import { TiptapEditor } from "@/components/editor/tiptap-editor";
 import { TagChipInput } from "@/components/projects/tag-chip-input";
 import {
   GithubImportDialog,
   type ImportFields,
 } from "@/components/projects/github-import-dialog";
-import { STATUS_VALUES, PRIORITY_VALUES } from "@/lib/projects";
+import {
+  PRIORITY_META,
+  PRIORITY_ORDER,
+  STATUS_META,
+  STATUS_ORDER,
+} from "@/lib/lifecycle";
 
-// Form-level schema mirrors projectInputSchema but with strings for dates and
-// urls so RHF can bind <input type="date"> and <input type="url"> directly.
+/* Dates and urls stay as strings here so react-hook-form can bind them
+   directly; `projectInputSchema` on the server does the real coercion. */
 const formSchema = z.object({
-  title: z.string().trim().min(1, "Title is required").max(200),
-  status: z.enum(STATUS_VALUES),
+  title: z.string().trim().min(1, "Give the project a title").max(200),
+  status: z.enum(STATUS_ORDER),
   tagline: z.string().trim().max(200),
   description: z.string().trim().max(5000),
   techStack: z.array(z.string().trim().min(1).max(40)).max(20),
   startDate: z.string(),
   targetEndDate: z.string(),
   actualEndDate: z.string(),
-  priority: z.enum(PRIORITY_VALUES),
+  priority: z.enum(PRIORITY_ORDER),
   githubUrl: z.string(),
   liveUrl: z.string(),
   designUrl: z.string(),
@@ -59,28 +58,11 @@ const formSchema = z.object({
 
 export type ProjectFormValues = z.infer<typeof formSchema>;
 
-const STATUS_LABEL: Record<(typeof STATUS_VALUES)[number], string> = {
-  IDEA: "Idea",
-  PLANNING: "Planning",
-  IN_PROGRESS: "In progress",
-  SHIPPED: "Shipped",
-  PAUSED: "Paused",
-  ABANDONED: "Abandoned",
-};
+type Status = (typeof STATUS_ORDER)[number];
 
-const PRIORITY_LABEL: Record<(typeof PRIORITY_VALUES)[number], string> = {
-  LOW: "Low",
-  MEDIUM: "Medium",
-  HIGH: "High",
-  CRITICAL: "Critical",
-};
-
-type Status = (typeof STATUS_VALUES)[number];
-
-// Snap the slider to each status's canonical position so changing the dropdown
-// always *feels* like a change. The user can drag afterwards to fine-tune.
-// PAUSED and ABANDONED are orthogonal lifecycle states, so we leave progress
-// alone for those.
+// Changing the stage snaps progress to that stage's canonical position, so the
+// dropdown always feels like it did something. Paused and abandoned are
+// orthogonal to progress, so they leave it alone.
 function progressForStatus(status: Status, current: number): number {
   switch (status) {
     case "IDEA":
@@ -96,8 +78,8 @@ function progressForStatus(status: Status, current: number): number {
   }
 }
 
-// Sliding the bar infers an active-lifecycle status, but never overwrites
-// PAUSED or ABANDONED — those are explicit user decisions.
+// Dragging the bar infers the stage back, but never overwrites an explicit
+// decision to pause or abandon.
 function statusForProgress(progress: number, current: Status): Status {
   if (current === "PAUSED" || current === "ABANDONED") return current;
   if (progress <= 0) return "IDEA";
@@ -147,9 +129,9 @@ export function ProjectForm({ mode, defaultValues, onSubmit }: ProjectFormProps)
   });
 
   const submit = handleSubmit((values) => {
-    // ProseMirror builds mark attrs via Object.create(null); Next.js Server
-    // Actions reject null-prototype objects. Round-trip through JSON to
-    // normalize every nested object back to a plain prototype.
+    // ProseMirror builds mark attrs with Object.create(null) and Server
+    // Actions reject null-prototype objects, so round-trip through JSON to
+    // give every nested object a plain prototype back.
     const safe: ProjectFormValues = {
       ...values,
       notes:
@@ -162,14 +144,9 @@ export function ProjectForm({ mode, defaultValues, onSubmit }: ProjectFormProps)
     });
   });
 
-  const submitLabel =
-    mode === "create" ? "Create project" : "Save changes";
-
   function applyImport(fields: ImportFields) {
     const opts = { shouldDirty: true } as const;
-    if (fields.title && !getValues("title")) {
-      setValue("title", fields.title, opts);
-    }
+    if (fields.title && !getValues("title")) setValue("title", fields.title, opts);
     if (fields.githubUrl) setValue("githubUrl", fields.githubUrl, opts);
     if (fields.liveUrl && !getValues("liveUrl")) {
       setValue("liveUrl", fields.liveUrl, opts);
@@ -181,89 +158,70 @@ export function ProjectForm({ mode, defaultValues, onSubmit }: ProjectFormProps)
       setValue("description", fields.description, opts);
     }
     if (fields.techStack.length > 0) {
-      const merged = Array.from(
-        new Set([...(getValues("techStack") ?? []), ...fields.techStack]),
-      ).slice(0, 20);
-      setValue("techStack", merged, opts);
+      setValue(
+        "techStack",
+        merge(getValues("techStack"), fields.techStack),
+        opts,
+      );
     }
     if (fields.tagNames.length > 0) {
-      const merged = Array.from(
-        new Set([...(getValues("tagNames") ?? []), ...fields.tagNames]),
-      ).slice(0, 20);
-      setValue("tagNames", merged, opts);
+      setValue("tagNames", merge(getValues("tagNames"), fields.tagNames), opts);
     }
   }
 
   return (
-    <form onSubmit={submit} className="space-y-6">
-      <div className="flex flex-col gap-3 rounded-xl border border-dashed border-border bg-card/50 px-4 py-3 shadow-xs sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 text-primary ring-1 ring-inset ring-primary/15">
-            <Github className="size-4" />
-          </span>
-          <div className="space-y-0.5">
-            <p className="text-sm font-medium text-foreground">
-              {mode === "create"
-                ? "Have a GitHub repo?"
-                : "Linked to a GitHub repo?"}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {mode === "create"
-                ? "Pull title, description, topics, and tech stack from it."
-                : "Re-sync any empty fields (existing values are preserved)."}
-            </p>
+    <form onSubmit={submit}>
+      <Section
+        title="Basics"
+        description="What you are building, in one line and a few sentences."
+        aside={
+          <div className="pt-1">
+            <GithubImportDialog onApply={applyImport} />
           </div>
-        </div>
-        <GithubImportDialog onApply={applyImport} />
-      </div>
+        }
+      >
+        <Field label="Title" htmlFor="title" error={errors.title?.message} required>
+          <Input
+            id="title"
+            placeholder="Neon Ledger"
+            aria-invalid={errors.title ? "true" : "false"}
+            {...register("title")}
+          />
+        </Field>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Basics</CardTitle>
-          <CardDescription>
-            What are you building, in one line and a few sentences?
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Field
-            label="Title"
-            htmlFor="title"
-            error={errors.title?.message}
-            required
-          >
-            <Input id="title" {...register("title")} placeholder="My next big idea" />
-          </Field>
+        <Field
+          label="Tagline"
+          htmlFor="tagline"
+          hint="Optional"
+          error={errors.tagline?.message}
+        >
+          <Input
+            id="tagline"
+            placeholder="A calm home for side projects"
+            {...register("tagline")}
+          />
+        </Field>
 
-          <Field
-            label="Tagline"
-            htmlFor="tagline"
-            hint="A short hook (optional)"
-            error={errors.tagline?.message}
-          >
-            <Input id="tagline" {...register("tagline")} placeholder="A calm tool for tracking projects" />
-          </Field>
+        <Field
+          label="Description"
+          htmlFor="description"
+          error={errors.description?.message}
+        >
+          <Textarea
+            id="description"
+            rows={5}
+            placeholder="What is it, who is it for, and why does it matter?"
+            {...register("description")}
+          />
+        </Field>
+      </Section>
 
-          <Field
-            label="Description"
-            htmlFor="description"
-            error={errors.description?.message}
-          >
-            <Textarea
-              id="description"
-              rows={4}
-              {...register("description")}
-              placeholder="What is it, who is it for, why does it matter?"
-            />
-          </Field>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Status & priority</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-3">
-          <Field label="Status" error={errors.status?.message}>
+      <Section
+        title="Stage and priority"
+        description="Moving the stage sets progress to match, and dragging progress moves the stage back."
+      >
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Stage" error={errors.status?.message}>
             <Controller
               control={control}
               name="status"
@@ -273,23 +231,20 @@ export function ProjectForm({ mode, defaultValues, onSubmit }: ProjectFormProps)
                   onValueChange={(val) => {
                     const next = val as Status;
                     field.onChange(next);
-                    const cur = Math.min(
-                      100,
-                      Math.max(0, Number(getValues("progress")) || 0),
-                    );
-                    const nextProgress = progressForStatus(next, cur);
-                    if (nextProgress !== cur) {
+                    const current = clamp(Number(getValues("progress")) || 0);
+                    const nextProgress = progressForStatus(next, current);
+                    if (nextProgress !== current) {
                       setValue("progress", nextProgress, { shouldDirty: true });
                     }
                   }}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger aria-label="Stage">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {STATUS_VALUES.map((s) => (
+                    {STATUS_ORDER.map((s) => (
                       <SelectItem key={s} value={s}>
-                        {STATUS_LABEL[s]}
+                        {STATUS_META[s].label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -304,13 +259,13 @@ export function ProjectForm({ mode, defaultValues, onSubmit }: ProjectFormProps)
               name="priority"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger>
+                  <SelectTrigger aria-label="Priority">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {PRIORITY_VALUES.map((p) => (
+                    {PRIORITY_ORDER.map((p) => (
                       <SelectItem key={p} value={p}>
-                        {PRIORITY_LABEL[p]}
+                        {PRIORITY_META[p].label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -318,50 +273,44 @@ export function ProjectForm({ mode, defaultValues, onSubmit }: ProjectFormProps)
               )}
             />
           </Field>
+        </div>
 
-          <Controller
-            control={control}
-            name="progress"
-            render={({ field }) => {
-              const value = Math.min(100, Math.max(0, Number(field.value) || 0));
-              return (
-                <Field
-                  label="Progress"
-                  hint={`${value}%`}
-                  error={errors.progress?.message}
-                >
-                  <div className="flex h-10 items-center px-1">
-                    <Slider
-                      value={[value]}
-                      min={0}
-                      max={100}
-                      step={1}
-                      onValueChange={([v]) => {
-                        const next = v ?? 0;
-                        field.onChange(next);
-                        const curStatus = getValues("status") as Status;
-                        const nextStatus = statusForProgress(next, curStatus);
-                        if (nextStatus !== curStatus) {
-                          setValue("status", nextStatus, { shouldDirty: true });
-                        }
-                      }}
-                      aria-label="Progress"
-                    />
-                  </div>
-                </Field>
-              );
-            }}
-          />
-        </CardContent>
-      </Card>
+        <Controller
+          control={control}
+          name="progress"
+          render={({ field }) => {
+            const value = clamp(Number(field.value) || 0);
+            return (
+              <Field
+                label="Progress"
+                hint={`${value}%`}
+                error={errors.progress?.message}
+              >
+                <Slider
+                  value={[value]}
+                  min={0}
+                  max={100}
+                  step={1}
+                  aria-label="Progress"
+                  onValueChange={([v]) => {
+                    const next = v ?? 0;
+                    field.onChange(next);
+                    const currentStatus = getValues("status") as Status;
+                    const nextStatus = statusForProgress(next, currentStatus);
+                    if (nextStatus !== currentStatus) {
+                      setValue("status", nextStatus, { shouldDirty: true });
+                    }
+                  }}
+                />
+              </Field>
+            );
+          }}
+        />
+      </Section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Timeline</CardTitle>
-          <CardDescription>All dates are optional.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-3">
-          <Field label="Start date" error={errors.startDate?.message}>
+      <Section title="Timeline" description="All three dates are optional.">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Field label="Started" error={errors.startDate?.message}>
             <Controller
               control={control}
               name="startDate"
@@ -369,13 +318,12 @@ export function ProjectForm({ mode, defaultValues, onSubmit }: ProjectFormProps)
                 <DatePicker
                   value={field.value ?? ""}
                   onChange={field.onChange}
-                  placeholder="Start"
                   ariaLabel="Start date"
                 />
               )}
             />
           </Field>
-          <Field label="Target end" error={errors.targetEndDate?.message}>
+          <Field label="Target" error={errors.targetEndDate?.message}>
             <Controller
               control={control}
               name="targetEndDate"
@@ -383,13 +331,12 @@ export function ProjectForm({ mode, defaultValues, onSubmit }: ProjectFormProps)
                 <DatePicker
                   value={field.value ?? ""}
                   onChange={field.onChange}
-                  placeholder="Target"
                   ariaLabel="Target end date"
                 />
               )}
             />
           </Field>
-          <Field label="Actual end" error={errors.actualEndDate?.message}>
+          <Field label="Completed" error={errors.actualEndDate?.message}>
             <Controller
               control={control}
               name="actualEndDate"
@@ -397,23 +344,19 @@ export function ProjectForm({ mode, defaultValues, onSubmit }: ProjectFormProps)
                 <DatePicker
                   value={field.value ?? ""}
                   onChange={field.onChange}
-                  placeholder="Actual"
                   ariaLabel="Actual end date"
                 />
               )}
             />
           </Field>
-        </CardContent>
-      </Card>
+        </div>
+      </Section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Tech & tags</CardTitle>
-          <CardDescription>
-            Type and press Enter or comma to add. Backspace removes the last entry.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
+      <Section
+        title="Tech and tags"
+        description="Press Enter or comma to add an entry. Backspace removes the last one."
+      >
+        <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Tech stack" error={errors.techStack?.message}>
             <Controller
               control={control}
@@ -428,7 +371,6 @@ export function ProjectForm({ mode, defaultValues, onSubmit }: ProjectFormProps)
               )}
             />
           </Field>
-
           <Field label="Tags" error={errors.tagNames?.message}>
             <Controller
               control={control}
@@ -443,102 +385,93 @@ export function ProjectForm({ mode, defaultValues, onSubmit }: ProjectFormProps)
               )}
             />
           </Field>
-        </CardContent>
-      </Card>
+        </div>
+      </Section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Links</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          <Field
-            label="GitHub"
-            htmlFor="githubUrl"
-            error={errors.githubUrl?.message}
-          >
+      <Section
+        title="Links"
+        description="Anywhere this project lives. Each one becomes a shortcut on the ledger."
+      >
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="GitHub" htmlFor="githubUrl" error={errors.githubUrl?.message}>
             <Input
               id="githubUrl"
               type="url"
+              inputMode="url"
               placeholder="https://github.com/you/repo"
               {...register("githubUrl")}
             />
           </Field>
-          <Field
-            label="Live URL"
-            htmlFor="liveUrl"
-            error={errors.liveUrl?.message}
-          >
+          <Field label="Live site" htmlFor="liveUrl" error={errors.liveUrl?.message}>
             <Input
               id="liveUrl"
               type="url"
+              inputMode="url"
               placeholder="https://your-app.com"
               {...register("liveUrl")}
             />
           </Field>
-          <Field
-            label="Design"
-            htmlFor="designUrl"
-            error={errors.designUrl?.message}
-          >
+          <Field label="Design" htmlFor="designUrl" error={errors.designUrl?.message}>
             <Input
               id="designUrl"
               type="url"
-              placeholder="https://figma.com/..."
+              inputMode="url"
+              placeholder="https://figma.com/file/..."
               {...register("designUrl")}
             />
           </Field>
-          <Field
-            label="Docs"
-            htmlFor="docsUrl"
-            error={errors.docsUrl?.message}
-          >
+          <Field label="Docs" htmlFor="docsUrl" error={errors.docsUrl?.message}>
             <Input
               id="docsUrl"
               type="url"
+              inputMode="url"
               placeholder="https://notion.so/..."
               {...register("docsUrl")}
             />
           </Field>
-        </CardContent>
-      </Card>
+        </div>
+      </Section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Notes</CardTitle>
-          <CardDescription>
-            Ideas, todos, future improvements — links are clickable in view mode.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Controller
-            control={control}
-            name="notes"
-            render={({ field }) => (
-              <TiptapEditor
-                value={(field.value as JSONContent | null) ?? null}
-                onChange={field.onChange}
-              />
-            )}
-          />
-        </CardContent>
-      </Card>
+      <Section
+        title="Notes"
+        description="Open questions, todos, and anything worth remembering next time. Links stay clickable when you read it back."
+      >
+        <Controller
+          control={control}
+          name="notes"
+          render={({ field }) => (
+            <TiptapEditor
+              value={(field.value as JSONContent | null) ?? null}
+              onChange={field.onChange}
+            />
+          )}
+        />
+      </Section>
 
-      <div className="sticky bottom-0 z-10 -mx-4 flex flex-col-reverse gap-3 border-t border-border bg-background/80 px-4 py-4 backdrop-blur sm:mx-0 sm:flex-row sm:justify-end sm:rounded-xl sm:border sm:px-4 sm:shadow-sm">
+      <div className="sticky bottom-0 flex items-center justify-end gap-2 border-t border-border bg-background/90 py-4 backdrop-blur">
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           onClick={() => router.back()}
           disabled={isPending}
         >
           Cancel
         </Button>
         <Button type="submit" disabled={isPending}>
-          {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-          {submitLabel}
+          {isPending ? <Loader2 className="animate-spin" /> : null}
+          {mode === "create" ? "Create project" : "Save changes"}
         </Button>
       </div>
     </form>
   );
+}
+
+function clamp(n: number): number {
+  return Math.min(100, Math.max(0, n));
+}
+
+function merge(current: string[] | undefined, incoming: string[]): string[] {
+  return Array.from(new Set([...(current ?? []), ...incoming])).slice(0, 20);
 }
 
 type FieldProps = {
@@ -552,16 +485,26 @@ type FieldProps = {
 
 function Field({ label, htmlFor, hint, error, required, children }: FieldProps) {
   return (
-    <div className="space-y-1.5">
-      <div className="flex items-baseline justify-between">
+    <div className="min-w-0 space-y-1.5">
+      <div className="flex items-baseline justify-between gap-2">
         <Label htmlFor={htmlFor}>
           {label}
-          {required ? <span className="ml-0.5 text-destructive">*</span> : null}
+          {required ? (
+            <span className="ml-0.5 text-destructive" aria-hidden>
+              *
+            </span>
+          ) : null}
         </Label>
-        {hint ? <span className="text-xs text-muted-foreground">{hint}</span> : null}
+        {hint ? (
+          <span className="tabular text-xs text-muted-foreground">{hint}</span>
+        ) : null}
       </div>
       {children}
-      {error ? <p className="text-xs text-destructive">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="text-xs text-destructive">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }

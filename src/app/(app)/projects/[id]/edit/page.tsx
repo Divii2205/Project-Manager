@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import type { JSONContent } from "@tiptap/react";
 
 import { PageHeader } from "@/components/page-header";
@@ -7,6 +9,7 @@ import { ProjectForm } from "@/components/projects/project-form";
 import type { ProjectFormValues } from "@/components/projects/project-form";
 import { updateProject } from "@/app/actions/projects";
 import { getProject, requireUserId } from "@/lib/projects";
+import { toDateInputValue } from "@/lib/dates";
 
 type PageProps = { params: { id: string } };
 
@@ -29,9 +32,9 @@ export default async function EditProjectPage({ params }: PageProps) {
     tagline: project.tagline ?? "",
     description: project.description ?? "",
     techStack: project.techStack,
-    startDate: toDateInput(project.startDate),
-    targetEndDate: toDateInput(project.targetEndDate),
-    actualEndDate: toDateInput(project.actualEndDate),
+    startDate: toDateInputValue(project.startDate),
+    targetEndDate: toDateInputValue(project.targetEndDate),
+    actualEndDate: toDateInputValue(project.actualEndDate),
     priority: project.priority,
     githubUrl: project.githubUrl ?? "",
     liveUrl: project.liveUrl ?? "",
@@ -42,20 +45,23 @@ export default async function EditProjectPage({ params }: PageProps) {
     tagNames: project.projectTags.map((pt) => pt.tag.name),
   };
 
-  const action = updateProject.bind(null, project.id);
-
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Edit project"
-        description={project.title}
+    <div className="max-w-4xl space-y-8">
+      <div className="space-y-4">
+        <Link
+          href={`/projects/${project.id}`}
+          className="inline-flex items-center gap-1.5 rounded-sm text-xs text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="size-3.5" />
+          Back to {project.title}
+        </Link>
+        <PageHeader title="Edit project" />
+      </div>
+      <ProjectForm
+        mode="edit"
+        defaultValues={defaults}
+        onSubmit={updateProject.bind(null, project.id)}
       />
-      <ProjectForm mode="edit" defaultValues={defaults} onSubmit={action} />
     </div>
   );
-}
-
-function toDateInput(d: Date | null): string {
-  if (!d) return "";
-  return d.toISOString().slice(0, 10);
 }

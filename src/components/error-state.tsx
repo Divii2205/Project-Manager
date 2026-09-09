@@ -1,23 +1,23 @@
 import Link from "next/link";
-import { AlertTriangle } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export type ErrorStateProps = {
-  icon?: LucideIcon;
   title: string;
   description?: string;
+  /** Shown in small type under the actions, e.g. an error digest. */
+  detail?: string;
   primary?: { label: string; onClick?: () => void; href?: string };
   secondary?: { label: string; href: string };
   className?: string;
 };
 
+/** States what went wrong and what to do about it. No apology, no icon. */
 export function ErrorState({
-  icon: Icon = AlertTriangle,
   title,
   description,
+  detail,
   primary,
   secondary,
   className,
@@ -25,26 +25,23 @@ export function ErrorState({
   return (
     <div
       className={cn(
-        "flex min-h-[60vh] flex-col items-center justify-center gap-4 px-6 text-center",
+        "flex min-h-[60vh] flex-col items-start justify-center gap-5",
         className,
       )}
     >
-      <span className="flex size-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
-        <Icon className="size-5" />
-      </span>
-      <div className="max-w-md space-y-1">
-        <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+      <div className="max-w-prose space-y-2">
+        <p className="h-px w-10 bg-destructive" aria-hidden />
+        <h2 className="pt-3 text-xl font-semibold tracking-tighter text-foreground">
+          {title}
+        </h2>
         {description ? (
-          <p className="text-sm text-muted-foreground">{description}</p>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {description}
+          </p>
         ) : null}
       </div>
       {primary || secondary ? (
-        <div className="flex flex-col-reverse items-center gap-2 sm:flex-row">
-          {secondary ? (
-            <Button asChild variant="outline">
-              <Link href={secondary.href}>{secondary.label}</Link>
-            </Button>
-          ) : null}
+        <div className="flex flex-wrap items-center gap-2">
           {primary ? (
             primary.href ? (
               <Button asChild>
@@ -54,7 +51,17 @@ export function ErrorState({
               <Button onClick={primary.onClick}>{primary.label}</Button>
             )
           ) : null}
+          {secondary ? (
+            <Button asChild variant="outline">
+              <Link href={secondary.href}>{secondary.label}</Link>
+            </Button>
+          ) : null}
         </div>
+      ) : null}
+      {detail ? (
+        <p className="font-mono text-[0.6875rem] text-muted-foreground/70">
+          {detail}
+        </p>
       ) : null}
     </div>
   );

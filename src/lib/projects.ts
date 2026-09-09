@@ -5,10 +5,38 @@ import type { Priority, Project, ProjectStatus, ProjectTag, Tag } from "@prisma/
 
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { PRIORITY_ORDER, STATUS_ORDER } from "@/lib/lifecycle";
+// Type-only, so this does not pull a component into the data layer at runtime.
+import type { ProjectRowData } from "@/components/project-row";
 
 export type ProjectWithTags = Project & {
   projectTags: (ProjectTag & { tag: Tag })[];
 };
+
+/** Shapes a loaded project for the ledger row. Every page that lists projects
+ *  goes through this instead of repeating the mapping inline. */
+export function toProjectRow(project: ProjectWithTags): ProjectRowData {
+  return {
+    id: project.id,
+    title: project.title,
+    tagline: project.tagline,
+    description: project.description,
+    status: project.status,
+    priority: project.priority,
+    progress: project.progress,
+    targetEndDate: project.targetEndDate,
+    actualEndDate: project.actualEndDate,
+    githubUrl: project.githubUrl,
+    liveUrl: project.liveUrl,
+    designUrl: project.designUrl,
+    docsUrl: project.docsUrl,
+    tags: project.projectTags.map((pt) => ({
+      id: pt.tag.id,
+      name: pt.tag.name,
+      color: pt.tag.color,
+    })),
+  };
+}
 
 // ─── Auth helper ──────────────────────────────────────────────────────────────
 
@@ -20,21 +48,10 @@ export const requireUserId = cache(async (): Promise<string> => {
 
 // ─── Schemas ──────────────────────────────────────────────────────────────────
 
-export const STATUS_VALUES = [
-  "IDEA",
-  "PLANNING",
-  "IN_PROGRESS",
-  "SHIPPED",
-  "PAUSED",
-  "ABANDONED",
-] as const satisfies readonly ProjectStatus[];
-
-export const PRIORITY_VALUES = [
-  "LOW",
-  "MEDIUM",
-  "HIGH",
-  "CRITICAL",
-] as const satisfies readonly Priority[];
+// The lifecycle vocabulary lives in one place; the schema reads it from there
+// so the enum, the filter bar, and the form can never drift apart.
+export const STATUS_VALUES = STATUS_ORDER;
+export const PRIORITY_VALUES = PRIORITY_ORDER;
 
 const dateString = z
   .string()
@@ -107,15 +124,18 @@ export type ProjectInputParsed = z.output<typeof projectInputSchema>;
 
 // ─── Tag color palette ────────────────────────────────────────────────────────
 
+// Mid-tone and desaturated on purpose: a tag colour is stored as a literal
+// hex, so the same value has to stay legible on the paper ground and on the
+// dark one. Saturated brights read as confetti once a few tags are on screen.
 const TAG_PALETTE = [
-  "#8B5CF6", // lavender
-  "#10B981", // emerald
-  "#F59E0B", // amber
-  "#EF4444", // red
-  "#3B82F6", // blue
-  "#EC4899", // pink
-  "#14B8A6", // teal
-  "#F97316", // orange
+  "#2F7D68", // pine
+  "#4C6C8E", // slate
+  "#A8762A", // ochre
+  "#9C4A48", // claret
+  "#6B7F3E", // moss
+  "#7A5578", // plum
+  "#9A6446", // clay
+  "#3F7C82", // teal
 ];
 
 export function tagColorFor(name: string): string {
@@ -171,6 +191,10 @@ export async function listProjects(
   });
 }
 
+export async function countProjects(userId: string): Promise<number> {
+  return prisma.project.count({ where: { userId, deletedAt: null } });
+}
+
 // Cached per-request: generateMetadata and the page component both fetch the
 // same project — dedupe so it's a single round-trip to Neon.
 export const getProject = cache(async (userId: string, id: string) => {
@@ -187,15 +211,22 @@ export type DashboardStats = {
   inProgress: number;
   shipped: number;
   upcomingDeadlines: number;
+  overdue: number;
   byStatus: Record<ProjectStatus, number>;
+};
+
+/** Shipped and abandoned projects are closed, so deadline maths skips them. */
+const OPEN_STATUSES: { notIn: ProjectStatus[] } = {
+  notIn: ["SHIPPED", "ABANDONED"],
 };
 
 export async function getDashboardStats(
   userId: string,
 ): Promise<DashboardStats> {
   const baseWhere = { userId, deletedAt: null };
+  const now = new Date();
 
-  const [total, statusCounts, upcomingDeadlines] = await Promise.all([
+  const [total, statusCounts, upcomingDeadlines, overdue] = await Promise.all([
     prisma.project.count({ where: baseWhere }),
     prisma.project.groupBy({
       by: ["status"],
@@ -206,10 +237,17 @@ export async function getDashboardStats(
       where: {
         ...baseWhere,
         targetEndDate: {
-          gte: new Date(),
-          lte: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+          gte: now,
+          lte: new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000),
         },
-        status: { notIn: ["SHIPPED", "ABANDONED"] },
+        status: OPEN_STATUSES,
+      },
+    }),
+    prisma.project.count({
+      where: {
+        ...baseWhere,
+        targetEndDate: { lt: now },
+        status: OPEN_STATUSES,
       },
     }),
   ]);
@@ -232,6 +270,7 @@ export async function getDashboardStats(
     inProgress: byStatus.IN_PROGRESS,
     shipped: byStatus.SHIPPED,
     upcomingDeadlines,
+    overdue,
     byStatus,
   };
 }
@@ -240,6 +279,27 @@ export async function getRecentProjects(userId: string, take = 5) {
   return prisma.project.findMany({
     where: { userId, deletedAt: null },
     orderBy: { updatedAt: "desc" },
+    take,
+    include: {
+      projectTags: { include: { tag: true } },
+    },
+  });
+}
+
+/** Open projects with a target date already past or landing within two weeks.
+ *  Soonest first, so the most pressing row is the one at the top. */
+export async function getProjectsNeedingAttention(userId: string, take = 5) {
+  return prisma.project.findMany({
+    where: {
+      userId,
+      deletedAt: null,
+      status: OPEN_STATUSES,
+      targetEndDate: {
+        not: null,
+        lte: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+      },
+    },
+    orderBy: { targetEndDate: "asc" },
     take,
     include: {
       projectTags: { include: { tag: true } },

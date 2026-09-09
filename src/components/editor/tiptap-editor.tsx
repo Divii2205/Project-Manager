@@ -1,25 +1,31 @@
 "use client";
 
-import { useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import type { Editor, JSONContent } from "@tiptap/react";
 import {
   Bold,
-  Italic,
-  Strikethrough,
+  Code,
   Heading2,
   Heading3,
+  Italic,
+  Link as LinkIcon,
   List,
   ListOrdered,
   Quote,
-  Code,
-  Link as LinkIcon,
-  Undo,
-  Redo,
+  Redo2,
+  Strikethrough,
+  Undo2,
 } from "lucide-react";
 
 import { tiptapExtensions } from "@/components/editor/tiptap-extensions";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
 export type TiptapEditorProps = {
@@ -35,24 +41,31 @@ export function TiptapEditor({ value, onChange, className }: TiptapEditorProps) 
     immediatelyRender: false,
     editorProps: {
       attributes: {
-        class:
-          "tiptap-content min-h-[200px] px-4 py-3 focus:outline-none",
+        class: "min-h-[220px] px-3 py-2.5 focus:outline-none",
       },
     },
     onUpdate: ({ editor: e }) => {
-      const json = e.getJSON();
-      const empty = e.isEmpty;
-      onChange(empty ? null : json);
+      onChange(e.isEmpty ? null : e.getJSON());
     },
   });
 
-  if (!editor) return null;
+  if (!editor) {
+    return (
+      <div
+        className={cn(
+          "h-[17.5rem] rounded-sm border border-input bg-card",
+          className,
+        )}
+      />
+    );
+  }
 
   return (
     <div
       className={cn(
-        "rounded-lg border border-input bg-background",
-        "focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background",
+        "tiptap-content rounded-sm border border-input bg-card",
+        "transition-colors focus-within:border-foreground/25",
+        "focus-within:outline focus-within:outline-2 focus-within:outline-offset-1 focus-within:outline-ring",
         className,
       )}
     >
@@ -62,147 +75,191 @@ export function TiptapEditor({ value, onChange, className }: TiptapEditorProps) 
   );
 }
 
-type ToolbarProps = { editor: Editor };
-
-function Toolbar({ editor }: ToolbarProps) {
-  const setLink = useCallback(() => {
-    const previous = editor.getAttributes("link").href as string | undefined;
-    const url = window.prompt("Link URL", previous ?? "https://");
-    if (url === null) return;
-    if (url === "") {
-      editor.chain().focus().extendMarkRange("link").unsetLink().run();
-      return;
-    }
-    editor
-      .chain()
-      .focus()
-      .extendMarkRange("link")
-      .setLink({ href: url })
-      .run();
-  }, [editor]);
-
+function Toolbar({ editor }: { editor: Editor }) {
   return (
-    <div className="flex flex-wrap items-center gap-0.5 border-b border-border p-1">
-      <ToolbarButton
+    <div className="flex flex-wrap items-center gap-0.5 border-b border-border px-1 py-1">
+      <Tool
         label="Bold"
         active={editor.isActive("bold")}
         onClick={() => editor.chain().focus().toggleBold().run()}
       >
-        <Bold className="size-3.5" />
-      </ToolbarButton>
-      <ToolbarButton
+        <Bold />
+      </Tool>
+      <Tool
         label="Italic"
         active={editor.isActive("italic")}
         onClick={() => editor.chain().focus().toggleItalic().run()}
       >
-        <Italic className="size-3.5" />
-      </ToolbarButton>
-      <ToolbarButton
+        <Italic />
+      </Tool>
+      <Tool
         label="Strikethrough"
         active={editor.isActive("strike")}
         onClick={() => editor.chain().focus().toggleStrike().run()}
       >
-        <Strikethrough className="size-3.5" />
-      </ToolbarButton>
+        <Strikethrough />
+      </Tool>
+      <Tool
+        label="Inline code"
+        active={editor.isActive("code")}
+        onClick={() => editor.chain().focus().toggleCode().run()}
+      >
+        <Code />
+      </Tool>
+
       <Divider />
-      <ToolbarButton
-        label="Heading 2"
+
+      <Tool
+        label="Heading"
         active={editor.isActive("heading", { level: 2 })}
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
       >
-        <Heading2 className="size-3.5" />
-      </ToolbarButton>
-      <ToolbarButton
-        label="Heading 3"
+        <Heading2 />
+      </Tool>
+      <Tool
+        label="Subheading"
         active={editor.isActive("heading", { level: 3 })}
         onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
       >
-        <Heading3 className="size-3.5" />
-      </ToolbarButton>
-      <Divider />
-      <ToolbarButton
+        <Heading3 />
+      </Tool>
+      <Tool
         label="Bullet list"
         active={editor.isActive("bulletList")}
         onClick={() => editor.chain().focus().toggleBulletList().run()}
       >
-        <List className="size-3.5" />
-      </ToolbarButton>
-      <ToolbarButton
-        label="Ordered list"
+        <List />
+      </Tool>
+      <Tool
+        label="Numbered list"
         active={editor.isActive("orderedList")}
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
       >
-        <ListOrdered className="size-3.5" />
-      </ToolbarButton>
-      <ToolbarButton
-        label="Blockquote"
+        <ListOrdered />
+      </Tool>
+      <Tool
+        label="Quote"
         active={editor.isActive("blockquote")}
         onClick={() => editor.chain().focus().toggleBlockquote().run()}
       >
-        <Quote className="size-3.5" />
-      </ToolbarButton>
-      <ToolbarButton
-        label="Code"
-        active={editor.isActive("code")}
-        onClick={() => editor.chain().focus().toggleCode().run()}
-      >
-        <Code className="size-3.5" />
-      </ToolbarButton>
+        <Quote />
+      </Tool>
+
       <Divider />
-      <ToolbarButton
-        label="Link"
-        active={editor.isActive("link")}
-        onClick={setLink}
-      >
-        <LinkIcon className="size-3.5" />
-      </ToolbarButton>
-      <Divider />
-      <ToolbarButton
-        label="Undo"
-        disabled={!editor.can().undo()}
-        onClick={() => editor.chain().focus().undo().run()}
-      >
-        <Undo className="size-3.5" />
-      </ToolbarButton>
-      <ToolbarButton
-        label="Redo"
-        disabled={!editor.can().redo()}
-        onClick={() => editor.chain().focus().redo().run()}
-      >
-        <Redo className="size-3.5" />
-      </ToolbarButton>
+
+      <LinkTool editor={editor} />
+
+      <div className="ml-auto flex items-center gap-0.5">
+        <Tool
+          label="Undo"
+          disabled={!editor.can().undo()}
+          onClick={() => editor.chain().focus().undo().run()}
+        >
+          <Undo2 />
+        </Tool>
+        <Tool
+          label="Redo"
+          disabled={!editor.can().redo()}
+          onClick={() => editor.chain().focus().redo().run()}
+        >
+          <Redo2 />
+        </Tool>
+      </div>
     </div>
   );
 }
 
-type ToolbarButtonProps = {
-  label: string;
-  active?: boolean;
-  disabled?: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-};
+/** Replaces `window.prompt`, which is the one piece of browser chrome the
+ *  app cannot style. */
+function LinkTool({ editor }: { editor: Editor }) {
+  const [open, setOpen] = useState(false);
+  const [href, setHref] = useState("");
+  const active = editor.isActive("link");
 
-function ToolbarButton({
+  useEffect(() => {
+    if (!open) return;
+    const current = editor.getAttributes("link").href as string | undefined;
+    setHref(current ?? "");
+  }, [open, editor]);
+
+  function apply() {
+    const url = href.trim();
+    if (url === "") {
+      editor.chain().focus().extendMarkRange("link").unsetLink().run();
+    } else {
+      editor
+        .chain()
+        .focus()
+        .extendMarkRange("link")
+        .setLink({ href: url })
+        .run();
+    }
+    setOpen(false);
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Link"
+          aria-pressed={active}
+          className={cn(active && "bg-primary/10 text-primary")}
+        >
+          <LinkIcon />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-72 p-2">
+        <div className="flex gap-1.5">
+          <Input
+            value={href}
+            onChange={(e) => setHref(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                apply();
+              }
+            }}
+            placeholder="https://"
+            inputMode="url"
+            aria-label="Link URL"
+            autoFocus
+          />
+          <Button type="button" size="sm" onClick={apply}>
+            {href.trim() === "" && active ? "Remove" : "Apply"}
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function Tool({
   label,
   active,
   disabled,
   onClick,
   children,
-}: ToolbarButtonProps) {
+}: {
+  label: string;
+  active?: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
   return (
     <Button
       type="button"
       variant="ghost"
-      size="icon"
+      size="icon-sm"
       aria-label={label}
+      title={label}
       aria-pressed={active}
       disabled={disabled}
       onClick={onClick}
-      className={cn(
-        "h-8 w-8",
-        active && "bg-primary/10 text-primary hover:bg-primary/15",
-      )}
+      className={cn(active && "bg-primary/10 text-primary hover:bg-primary/15")}
     >
       {children}
     </Button>
@@ -210,5 +267,5 @@ function ToolbarButton({
 }
 
 function Divider() {
-  return <span className="mx-1 h-5 w-px bg-border" aria-hidden />;
+  return <span aria-hidden className="mx-1 h-4 w-px bg-border" />;
 }

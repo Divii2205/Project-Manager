@@ -1,14 +1,7 @@
-import { format } from "date-fns";
 import type { Priority, ProjectStatus } from "@prisma/client";
 
-const STATUS_LABEL: Record<ProjectStatus, string> = {
-  IDEA: "Idea",
-  PLANNING: "Planning",
-  IN_PROGRESS: "In progress",
-  SHIPPED: "Shipped",
-  PAUSED: "Paused",
-  ABANDONED: "Abandoned",
-};
+import { STATUS_META } from "@/lib/lifecycle";
+import { formatDay } from "@/lib/dates";
 
 export type DeadlineReminderProject = {
   id: string;
@@ -30,75 +23,88 @@ export type RenderedEmail = {
   html: string;
 };
 
+/* Palette matches the app: paper ground, warm ink, pine accent. Email clients
+   need inline styles, so the values are literals rather than tokens. */
+const PAPER = "#F1F0EC";
+const SURFACE = "#FFFFFF";
+const INK = "#1A1815";
+const MUTED = "#6B6862";
+const RULE = "#DFDCD4";
+const PINE = "#12564A";
+
 export function renderDeadlineEmail({
   name,
   projects,
   appUrl,
 }: RenderDeadlineEmailParams): RenderedEmail {
-  const greeting = name ? `Hi ${name},` : "Hi there,";
+  const greeting = name ? `Hi ${name},` : "Hi,";
   const count = projects.length;
   const subject =
     count === 1
-      ? "1 project deadline this week"
-      : `${count} project deadlines this week`;
+      ? "1 project is due this week"
+      : `${count} projects are due this week`;
 
   const items = projects.map((p) => ({
     ...p,
-    dateLabel: p.targetEndDate
-      ? format(p.targetEndDate, "EEE, MMM d")
-      : "—",
+    dateLabel: p.targetEndDate ? formatDay(p.targetEndDate, "EEE d MMM") : "no date",
+    statusLabel: STATUS_META[p.status].label,
   }));
 
-  const text =
-    `${greeting}\n\n` +
-    `These projects have target deadlines in the next 7 days:\n\n` +
-    items
-      .map(
-        (p) =>
-          `  • ${p.title} — due ${p.dateLabel} (${STATUS_LABEL[p.status]})`,
-      )
-      .join("\n") +
-    `\n\nOpen Project Manager: ${appUrl}/projects\n\n` +
-    `— Project Manager`;
+  const text = [
+    greeting,
+    "",
+    "These projects have a target date in the next seven days:",
+    "",
+    ...items.map((p) => `  - ${p.title}, due ${p.dateLabel} (${p.statusLabel})`),
+    "",
+    `Open your projects: ${appUrl}/projects`,
+    "",
+    "Turn these off any time in Settings.",
+  ].join("\n");
 
   const rows = items
     .map(
       (p) => `
-        <tr>
-          <td style="padding:12px 0;border-bottom:1px solid #E5E7EB;">
-            <a href="${appUrl}/projects/${p.id}" style="color:#0f172a;text-decoration:none;font-weight:600;">
-              ${escapeHtml(p.title)}
-            </a>
-            <div style="margin-top:2px;font-size:13px;color:#64748b;">
-              Due ${p.dateLabel} · ${STATUS_LABEL[p.status]}
-            </div>
-          </td>
-        </tr>`,
+          <tr>
+            <td style="padding:14px 16px;border-bottom:1px solid ${RULE};">
+              <a href="${appUrl}/projects/${p.id}" style="color:${INK};text-decoration:none;font-weight:600;font-size:15px;">${escapeHtml(p.title)}</a>
+              <div style="margin-top:3px;font-size:13px;color:${MUTED};">
+                Due ${escapeHtml(p.dateLabel)} &nbsp;&middot;&nbsp; ${escapeHtml(p.statusLabel)}
+              </div>
+            </td>
+          </tr>`,
     )
     .join("");
 
   const html = `<!doctype html>
 <html lang="en">
-  <body style="margin:0;padding:0;background:#F9FAFB;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif;color:#0f172a;">
-    <div style="max-width:560px;margin:0 auto;padding:32px 24px;">
-      <div style="display:inline-block;background:#8B5CF6;color:#fff;border-radius:8px;padding:6px 10px;font-size:13px;font-weight:600;letter-spacing:.02em;">
+  <body style="margin:0;padding:0;background:${PAPER};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:${INK};">
+    <div style="max-width:560px;margin:0 auto;padding:40px 24px;">
+      <div style="font-size:13px;font-weight:600;letter-spacing:-0.01em;color:${INK};">
         Project Manager
       </div>
-      <h1 style="font-size:20px;margin:24px 0 8px;color:#0f172a;">${escapeHtml(subject)}</h1>
-      <p style="margin:0 0 16px;color:#64748b;font-size:14px;">${escapeHtml(greeting)}</p>
-      <p style="margin:0 0 24px;font-size:14px;line-height:1.6;">
-        These projects have target deadlines in the next 7 days. Tap a title to open it.
+
+      <h1 style="font-size:22px;line-height:1.25;letter-spacing:-0.02em;margin:28px 0 10px;color:${INK};">
+        ${escapeHtml(subject)}
+      </h1>
+      <p style="margin:0 0 6px;font-size:14px;color:${MUTED};">${escapeHtml(greeting)}</p>
+      <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:${MUTED};">
+        Each one has a target date in the next seven days. Open a title to see where it stands.
       </p>
-      <table style="width:100%;border-collapse:collapse;">
+
+      <table role="presentation" style="width:100%;border-collapse:collapse;background:${SURFACE};border:1px solid ${RULE};border-radius:4px;">
         ${rows}
       </table>
-      <div style="margin-top:32px;">
-        <a href="${appUrl}/projects" style="display:inline-block;background:#8B5CF6;color:#fff;text-decoration:none;border-radius:8px;padding:10px 16px;font-size:14px;font-weight:500;">
-          Open all projects &rarr;
+
+      <div style="margin-top:28px;">
+        <a href="${appUrl}/projects" style="display:inline-block;background:${PINE};color:${PAPER};text-decoration:none;border-radius:2px;padding:10px 16px;font-size:14px;font-weight:500;">
+          Open all projects
         </a>
       </div>
-      <p style="margin:32px 0 0;font-size:12px;color:#94a3b8;">
-        You&apos;re receiving this because deadline reminders are turned on. You can change this in <a href="${appUrl}/settings" style="color:#8B5CF6;">Settings</a>.
+
+      <p style="margin:36px 0 0;font-size:12px;line-height:1.6;color:${MUTED};">
+        You get these because deadline reminders are on.
+        <a href="${appUrl}/settings" style="color:${PINE};">Turn them off in Settings.</a>
       </p>
     </div>
   </body>

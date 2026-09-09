@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { ChevronDown, Github, Loader2, Sparkles } from "lucide-react";
+import { ChevronDown, Github, Loader2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import {
@@ -47,11 +47,12 @@ export function GithubImportDialog({ onApply }: GithubImportDialogProps) {
     setResult(null);
     startTransition(async () => {
       try {
-        const data = await importFromGithub(url);
-        setResult(data);
+        setResult(await importFromGithub(url));
       } catch (e) {
         setError(
-          e instanceof Error ? e.message : "Couldn't import from GitHub.",
+          e instanceof Error
+            ? e.message
+            : "Could not read that repository. Check the URL and try again.",
         );
       }
     });
@@ -82,7 +83,7 @@ export function GithubImportDialog({ onApply }: GithubImportDialogProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button type="button" variant="outline" size="sm">
-          <Github className="size-4" />
+          <Github />
           Import from GitHub
         </Button>
       </DialogTrigger>
@@ -90,8 +91,8 @@ export function GithubImportDialog({ onApply }: GithubImportDialogProps) {
         <DialogHeader>
           <DialogTitle>Import from GitHub</DialogTitle>
           <DialogDescription>
-            Paste a public repo URL. We&apos;ll prefill description, topics,
-            tech stack, and links — you can edit before saving.
+            Paste a public repository URL. Fields you have already filled in
+            are left alone; empty ones get the values from the repo.
           </DialogDescription>
         </DialogHeader>
 
@@ -106,6 +107,7 @@ export function GithubImportDialog({ onApply }: GithubImportDialogProps) {
                 fetchRepo();
               }
             }}
+            aria-label="Repository URL"
             autoFocus
           />
           <Button
@@ -113,63 +115,61 @@ export function GithubImportDialog({ onApply }: GithubImportDialogProps) {
             onClick={fetchRepo}
             disabled={isPending || url.trim() === ""}
           >
-            {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-            Fetch
+            {isPending ? <Loader2 className="animate-spin" /> : null}
+            Read repo
           </Button>
         </div>
 
         {error ? (
-          <p className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+          <p
+            role="alert"
+            className="rounded-sm border border-destructive/30 bg-destructive/[0.05] px-3 py-2 text-[0.8125rem] text-destructive"
+          >
             {error}
           </p>
         ) : null}
 
         {result ? (
-          <div className="space-y-3 rounded-lg border border-border bg-card p-4">
-            <div className="flex items-center justify-between gap-2">
-              <p className="font-mono text-sm">
+          <div className="rounded-lg border border-border bg-card">
+            <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-2.5">
+              <p className="truncate font-mono text-xs">
                 {result.owner}/{result.repo}
               </p>
-              <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                <Sparkles className="size-3" />
-                Ready
+              <span className="shrink-0 text-xs text-primary">
+                Ready to apply
               </span>
             </div>
-            <PreviewRow label="Title" value={result.title} />
-            <PreviewRow
-              label="Description"
-              value={result.description ?? "—"}
-            />
-            <PreviewRow label="Homepage" value={result.homepage ?? "—"} />
-            <PreviewRow
-              label="Topics"
-              value={result.topics.length > 0 ? result.topics.join(", ") : "—"}
-            />
-            <PreviewRow
-              label="Tech stack"
-              value={
-                result.techStack.length > 0
-                  ? result.techStack.join(", ")
-                  : "—"
-              }
-            />
+            <dl className="px-4 py-1">
+              <PreviewRow label="Title" value={result.title} />
+              <PreviewRow label="Description" value={result.description} />
+              <PreviewRow label="Homepage" value={result.homepage} />
+              <PreviewRow
+                label="Topics"
+                value={result.topics.join(", ") || null}
+              />
+              <PreviewRow
+                label="Tech stack"
+                value={result.techStack.join(", ") || null}
+              />
+            </dl>
             {result.readme ? (
-              <div>
+              <div className="border-t border-border px-4 py-2.5">
                 <button
                   type="button"
                   onClick={() => setShowReadme((s) => !s)}
-                  className="flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+                  aria-expanded={showReadme}
+                  className="flex items-center gap-1.5 rounded-sm text-xs text-muted-foreground transition-colors hover:text-foreground"
                 >
                   <ChevronDown
                     className={cn(
-                      "size-3 transition-transform",
+                      "size-3.5 transition-transform",
                       showReadme ? "" : "-rotate-90",
                     )}
                   />
-                  README preview
+                  README
                 </button>
                 {showReadme ? (
-                  <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap break-words rounded-md bg-secondary p-3 text-xs leading-relaxed">
+                  <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap break-words rounded-sm bg-secondary/60 p-3 font-mono text-[0.6875rem] leading-relaxed">
                     {result.readme.slice(0, 4000)}
                     {result.readme.length > 4000 ? "\n…" : ""}
                   </pre>
@@ -180,11 +180,7 @@ export function GithubImportDialog({ onApply }: GithubImportDialogProps) {
         ) : null}
 
         <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setOpen(false)}
-          >
+          <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
             Cancel
           </Button>
           <Button type="button" onClick={apply} disabled={!result}>
@@ -196,13 +192,25 @@ export function GithubImportDialog({ onApply }: GithubImportDialogProps) {
   );
 }
 
-function PreviewRow({ label, value }: { label: string; value: string }) {
+function PreviewRow({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | null;
+}) {
   return (
-    <div className="grid gap-0.5">
-      <span className="text-xs font-medium text-muted-foreground">{label}</span>
-      <span className="line-clamp-2 break-all text-sm text-foreground">
-        {value}
-      </span>
+    <div className="grid grid-cols-[6rem_minmax(0,1fr)] gap-3 border-b border-border py-2 last:border-b-0">
+      <dt className="text-xs text-muted-foreground">{label}</dt>
+      <dd className="min-w-0 text-[0.8125rem]">
+        {value ? (
+          <span className="line-clamp-2 break-words text-foreground">
+            {value}
+          </span>
+        ) : (
+          <span className="text-muted-foreground/50">not set</span>
+        )}
+      </dd>
     </div>
   );
 }

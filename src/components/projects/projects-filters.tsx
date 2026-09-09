@@ -13,30 +13,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { STATUS_VALUES, PRIORITY_VALUES } from "@/lib/projects";
+import { PRIORITY_META, PRIORITY_ORDER, STATUS_META, STATUS_ORDER } from "@/lib/lifecycle";
 import { cn } from "@/lib/utils";
 
-const STATUS_LABEL: Record<(typeof STATUS_VALUES)[number], string> = {
-  IDEA: "Idea",
-  PLANNING: "Planning",
-  IN_PROGRESS: "In progress",
-  SHIPPED: "Shipped",
-  PAUSED: "Paused",
-  ABANDONED: "Abandoned",
-};
-
-const PRIORITY_LABEL: Record<(typeof PRIORITY_VALUES)[number], string> = {
-  LOW: "Low",
-  MEDIUM: "Medium",
-  HIGH: "High",
-  CRITICAL: "Critical",
-};
-
 const ALL = "ALL";
+const DEFAULT_SORT = "updated";
+
 const SORT_OPTIONS = [
   { value: "updated", label: "Recently updated" },
   { value: "created", label: "Recently created" },
-  { value: "title", label: "Title (A–Z)" },
+  { value: "title", label: "Title A–Z" },
 ];
 
 export type ProjectsFiltersProps = {
@@ -52,21 +38,19 @@ export function ProjectsFilters({ className }: ProjectsFiltersProps) {
   const initialQ = searchParams.get("q") ?? "";
   const status = searchParams.get("status") ?? ALL;
   const priority = searchParams.get("priority") ?? ALL;
-  const sort = searchParams.get("sort") ?? "updated";
+  const sort = searchParams.get("sort") ?? DEFAULT_SORT;
 
   const [draftQ, setDraftQ] = useState(initialQ);
 
-  // Keep local draft in sync if URL changes externally (e.g. clear button).
+  // Re-sync when the URL changes from outside the input (clear, back button).
   useEffect(() => {
     setDraftQ(initialQ);
   }, [initialQ]);
 
-  // Debounce search-input changes into the URL.
+  // Debounce typing into the URL.
   useEffect(() => {
     if (draftQ === initialQ) return;
-    const timer = setTimeout(() => {
-      pushParam("q", draftQ);
-    }, 300);
+    const timer = setTimeout(() => pushParam("q", draftQ), 300);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draftQ]);
@@ -77,70 +61,74 @@ export function ProjectsFilters({ className }: ProjectsFiltersProps) {
     if (value === null) params.delete(key);
     else params.set(key, value);
     startTransition(() => {
-      router.push(
-        params.toString() === ""
-          ? pathname
-          : `${pathname}?${params.toString()}`,
-      );
+      const query = params.toString();
+      router.push(query === "" ? pathname : `${pathname}?${query}`);
     });
   }
 
-  const hasFilters =
-    draftQ !== "" ||
-    status !== ALL ||
-    priority !== ALL ||
-    sort !== "updated";
+  // Sort is a view preference, not a filter, so clearing leaves it alone.
+  const hasFilters = draftQ !== "" || status !== ALL || priority !== ALL;
+
+  function clearFilters() {
+    setDraftQ("");
+    const params = new URLSearchParams();
+    if (sort !== DEFAULT_SORT) params.set("sort", sort);
+    startTransition(() => {
+      const query = params.toString();
+      router.push(query === "" ? pathname : `${pathname}?${query}`);
+    });
+  }
 
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center gap-2",
-        isPending ? "opacity-90" : null,
+        "flex flex-wrap items-center gap-2 transition-opacity",
+        isPending && "opacity-70",
         className,
       )}
     >
-      <div className="relative min-w-[200px] flex-1 sm:max-w-xs">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+      <div className="relative min-w-[12rem] flex-1">
+        <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="search"
           value={draftQ}
           onChange={(e) => setDraftQ(e.target.value)}
-          placeholder="Search title, tagline, description"
-          className="pl-9"
+          placeholder="Search projects"
+          className="pl-8"
           aria-label="Search projects"
         />
       </div>
 
       <Select value={status} onValueChange={(v) => pushParam("status", v)}>
-        <SelectTrigger className="w-[160px]">
-          <SelectValue placeholder="All statuses" />
+        <SelectTrigger className="w-[9.5rem]" aria-label="Filter by stage">
+          <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value={ALL}>All statuses</SelectItem>
-          {STATUS_VALUES.map((s) => (
+          <SelectItem value={ALL}>Any stage</SelectItem>
+          {STATUS_ORDER.map((s) => (
             <SelectItem key={s} value={s}>
-              {STATUS_LABEL[s]}
+              {STATUS_META[s].label}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
 
       <Select value={priority} onValueChange={(v) => pushParam("priority", v)}>
-        <SelectTrigger className="w-[140px]">
-          <SelectValue placeholder="All priorities" />
+        <SelectTrigger className="w-[9rem]" aria-label="Filter by priority">
+          <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value={ALL}>All priorities</SelectItem>
-          {PRIORITY_VALUES.map((p) => (
+          <SelectItem value={ALL}>Any priority</SelectItem>
+          {PRIORITY_ORDER.map((p) => (
             <SelectItem key={p} value={p}>
-              {PRIORITY_LABEL[p]}
+              {PRIORITY_META[p].label}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
 
       <Select value={sort} onValueChange={(v) => pushParam("sort", v)}>
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger className="w-[11rem]" aria-label="Sort projects">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -153,16 +141,9 @@ export function ProjectsFilters({ className }: ProjectsFiltersProps) {
       </Select>
 
       {hasFilters ? (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            setDraftQ("");
-            startTransition(() => router.push(pathname));
-          }}
-        >
-          <X className="size-3.5" />
-          Clear
+        <Button variant="ghost" size="sm" onClick={clearFilters}>
+          <X />
+          Clear filters
         </Button>
       ) : null}
     </div>

@@ -18,25 +18,32 @@ function initials(name?: string | null, email?: string | null) {
   return (first + last).toUpperCase() || source[0]!.toUpperCase();
 }
 
+/** The one round thing in the interface. */
 export function UserAvatar({ name, email, image, className }: UserAvatarProps) {
-  const baseClasses = cn(
-    "flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary text-xs font-medium text-foreground ring-1 ring-inset ring-border",
+  const base = cn(
+    "flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full",
+    "bg-secondary text-[0.625rem] font-semibold text-muted-foreground",
+    "ring-1 ring-inset ring-border",
     className,
   );
 
   if (image) {
     return (
-      <span className={baseClasses}>
+      <span className={base}>
         <Image
           src={image}
-          alt={name ?? email ?? "User avatar"}
-          width={32}
-          height={32}
+          alt=""
+          width={56}
+          height={56}
           className="size-full object-cover"
         />
       </span>
     );
   }
 
-  return <span className={baseClasses}>{initials(name, email)}</span>;
+  return (
+    <span className={base} aria-hidden>
+      {initials(name, email)}
+    </span>
+  );
 }

@@ -17,25 +17,13 @@ export function ThemeToggle() {
   return (
     <Button
       variant="ghost"
-      size="icon"
-      aria-label="Toggle theme"
+      size="icon-sm"
+      aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
       onClick={() => setTheme(isDark ? "light" : "dark")}
     >
-      {/* Render both icons SSR-safe; cross-fade on theme change. */}
-      <Sun
-        className={
-          mounted && isDark
-            ? "hidden"
-            : "size-4 text-muted-foreground"
-        }
-      />
-      <Moon
-        className={
-          mounted && isDark
-            ? "size-4 text-muted-foreground"
-            : "hidden"
-        }
-      />
+      {/* Both icons render on the server; only the resolved one is shown, so
+          the button never flips after hydration. */}
+      {isDark ? <Moon /> : <Sun />}
     </Button>
   );
 }

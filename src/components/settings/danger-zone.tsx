@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Section } from "@/components/section";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,13 +19,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { deleteAccount } from "@/app/actions/account";
 
 const CONFIRM_PHRASE = "delete my account";
@@ -34,99 +28,85 @@ export function DangerZone() {
   const [confirm, setConfirm] = useState("");
   const [isPending, startTransition] = useTransition();
 
+  const canDelete = confirm.trim().toLowerCase() === CONFIRM_PHRASE;
+
   function trigger() {
-    if (confirm.trim().toLowerCase() !== CONFIRM_PHRASE) return;
+    if (!canDelete) return;
     startTransition(async () => {
       try {
         await deleteAccount();
       } catch (e) {
-        // signOut throws a redirect; ignore that, surface anything else.
+        // The action ends in signOut, which throws a redirect on success.
         if (e instanceof Error && /NEXT_REDIRECT/.test(e.message)) return;
-        toast.error("Couldn't delete account. Please try again.");
+        toast.error("Could not delete the account. Try again.");
       }
     });
   }
 
-  const canDelete = confirm.trim().toLowerCase() === CONFIRM_PHRASE;
-
   return (
-    <Card className="border-destructive/30">
-      <CardHeader>
-        <CardTitle className="text-destructive">Danger zone</CardTitle>
-        <CardDescription>
-          Permanent, irreversible actions live here.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-col gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-foreground">
-              Delete your account
-            </p>
-            <p className="text-xs text-muted-foreground">
-              All your projects, tags, and notes will be permanently removed.
-            </p>
-          </div>
-          <AlertDialog
-            open={open}
-            onOpenChange={(v) => {
-              setOpen(v);
-              if (!v) setConfirm("");
-            }}
-          >
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive" className="shrink-0">
-                <Trash2 className="size-4" />
-                Delete account
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete your account?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This permanently removes your projects, tags, notes, and
-                  sign-in records. This cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <div className="space-y-1.5">
-                <Label htmlFor="delete-confirm" className="text-xs">
-                  Type{" "}
-                  <span className="font-mono text-foreground">
-                    {CONFIRM_PHRASE}
-                  </span>{" "}
-                  to confirm.
-                </Label>
-                <Input
-                  id="delete-confirm"
-                  value={confirm}
-                  onChange={(e) => setConfirm(e.target.value)}
-                  autoComplete="off"
-                />
-              </div>
-              <AlertDialogFooter>
-                <AlertDialogCancel disabled={isPending}>
-                  Cancel
-                </AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={(e) => {
-                    e.preventDefault();
-                    trigger();
-                  }}
-                  disabled={!canDelete || isPending}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  {isPending ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : (
-                    <Trash2 className="size-4" />
-                  )}
-                  Delete forever
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-      </CardContent>
-    </Card>
+    <Section
+      title="Delete account"
+      description="Removes your account and everything in it. There is no undo and no export."
+    >
+      <div className="flex flex-col gap-4 rounded-lg border border-destructive/30 bg-destructive/[0.04] p-4 sm:flex-row sm:items-center sm:justify-between">
+        <p className="max-w-md text-xs leading-relaxed text-muted-foreground">
+          Every project, tag, note, and sign-in record is deleted permanently,
+          including projects you previously moved to trash.
+        </p>
+        <AlertDialog
+          open={open}
+          onOpenChange={(v) => {
+            setOpen(v);
+            if (!v) setConfirm("");
+          }}
+        >
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" className="shrink-0">
+              <Trash2 />
+              Delete account
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete your account?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This deletes every project, tag, note, and sign-in record tied
+                to your account. It cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="space-y-1.5">
+              <Label htmlFor="delete-confirm">
+                Type{" "}
+                <span className="font-mono text-foreground">
+                  {CONFIRM_PHRASE}
+                </span>{" "}
+                to confirm
+              </Label>
+              <Input
+                id="delete-confirm"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                autoComplete="off"
+                spellCheck={false}
+              />
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault();
+                  trigger();
+                }}
+                disabled={!canDelete || isPending}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/[0.88]"
+              >
+                {isPending ? <Loader2 className="animate-spin" /> : <Trash2 />}
+                Delete forever
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </Section>
   );
 }

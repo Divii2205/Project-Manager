@@ -1,27 +1,17 @@
 import Link from "next/link";
-import {
-  ExternalLink,
-  FileText,
-  Flag,
-  Github,
-  Globe,
-  Layers,
-  Palette,
-  Pencil,
-} from "lucide-react";
+import { ArrowUpRight, FileText, Github, Globe, Palette, Pencil } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import type { Project, ProjectTag, Tag } from "@prisma/client";
-
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { StatusBadge } from "@/components/status-badge";
-import { PriorityDot } from "@/components/priority-dot";
-import { TiptapViewer } from "@/components/editor/tiptap-viewer";
 import type { JSONContent } from "@tiptap/react";
 
-type ProjectWithTags = Project & {
-  projectTags: (ProjectTag & { tag: Tag })[];
-};
+import { cn } from "@/lib/utils";
+import type { ProjectWithTags } from "@/lib/projects";
+import { STATUS_META, isClosed, priorityLabel } from "@/lib/lifecycle";
+import { daysUntil, describeDue, formatDayLong } from "@/lib/dates";
+import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/status-badge";
+import { PriorityMark } from "@/components/priority-mark";
+import { ProgressMeter } from "@/components/progress-meter";
+import { TiptapViewer } from "@/components/editor/tiptap-viewer";
 
 export type ProjectDetailProps = {
   project: ProjectWithTags;
@@ -29,37 +19,27 @@ export type ProjectDetailProps = {
 };
 
 export function ProjectDetail({ project, deleteSlot }: ProjectDetailProps) {
-  const hasNotes =
-    project.notes !== null &&
-    project.notes !== undefined &&
-    !(typeof project.notes === "object" &&
-      project.notes !== null &&
-      Object.keys(project.notes).length === 0);
-
-  const hasTech = project.techStack.length > 0;
-  const hasLinks = Boolean(
-    project.githubUrl ||
-      project.liveUrl ||
-      project.designUrl ||
-      project.docsUrl,
-  );
+  const notes = readNotes(project.notes);
+  const links = [
+    { href: project.githubUrl, label: "GitHub", icon: Github },
+    { href: project.liveUrl, label: "Live site", icon: Globe },
+    { href: project.docsUrl, label: "Docs", icon: FileText },
+    { href: project.designUrl, label: "Design", icon: Palette },
+  ].filter((l) => l.href);
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8">
-      <header className="space-y-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <StatusBadge status={project.status} />
-              <span className="text-xs text-muted-foreground">
-                Updated {formatDistanceToNow(project.updatedAt, { addSuffix: true })}
-              </span>
-            </div>
-            <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+    <article className="space-y-10">
+      <header className="space-y-6">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 space-y-3">
+            <StatusBadge status={project.status} />
+            {/* The one place a serif appears: a project is the only content
+                in the app with a name of its own. */}
+            <h1 className="font-display text-[2.125rem] leading-[1.06] tracking-tight text-foreground sm:text-[2.625rem]">
               {project.title}
             </h1>
             {project.tagline ? (
-              <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
+              <p className="max-w-prose text-base leading-relaxed text-muted-foreground">
                 {project.tagline}
               </p>
             ) : null}
@@ -67,7 +47,7 @@ export function ProjectDetail({ project, deleteSlot }: ProjectDetailProps) {
           <div className="flex shrink-0 items-center gap-2">
             <Button asChild variant="outline">
               <Link href={`/projects/${project.id}/edit`}>
-                <Pencil className="size-4" />
+                <Pencil />
                 Edit
               </Link>
             </Button>
@@ -75,135 +55,159 @@ export function ProjectDetail({ project, deleteSlot }: ProjectDetailProps) {
           </div>
         </div>
 
-        <ProgressBar progress={project.progress} />
+        <ProgressMeter
+          value={project.progress}
+          label="Progress"
+          showValue
+          className="max-w-md"
+        />
       </header>
 
-      {/* Meta boxes */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Panel title="Priority" icon={Flag} className="sm:col-span-2">
-          <PriorityDot priority={project.priority} showLabel />
-        </Panel>
+      <div className="grid gap-x-14 gap-y-10 lg:grid-cols-[minmax(0,1fr)_17rem]">
+        <div className="min-w-0 space-y-10">
+          <Prose title="Description">
+            {project.description ? (
+              <p className="max-w-prose whitespace-pre-line text-[0.9375rem] leading-[1.7] text-foreground">
+                {project.description}
+              </p>
+            ) : (
+              <Absent>
+                No description yet. Add one from the edit screen to record what
+                this is and who it is for.
+              </Absent>
+            )}
+          </Prose>
 
-        {/* Tech stack & links sit side by side; whichever is present alone
-            spans the full width. */}
-        {hasTech ? (
-          <Panel
-            title="Tech stack"
-            icon={Layers}
-            className={cn(!hasLinks && "sm:col-span-2")}
-          >
-            <div className="flex flex-wrap gap-1.5">
-              {project.techStack.map((tech) => (
-                <span
-                  key={tech}
-                  className="rounded-md bg-secondary px-2.5 py-1 text-xs font-medium text-foreground"
-                >
-                  {tech}
+          <Prose title="Notes">
+            {notes ? (
+              <TiptapViewer content={notes} />
+            ) : (
+              <Absent>
+                No notes yet. Use them for open questions, todos, and anything
+                worth remembering next time you pick this up.
+              </Absent>
+            )}
+          </Prose>
+        </div>
+
+        <aside className="lg:sticky lg:top-10 lg:self-start">
+          <dl className="border-t border-border text-[0.8125rem]">
+            <Row label="Stage">
+              <span className={cn("font-medium", STATUS_META[project.status].text)}>
+                {STATUS_META[project.status].label}
+              </span>
+            </Row>
+            <Row label="Priority">
+              <PriorityMark
+                priority={project.priority}
+                showLabel
+                className="text-[0.8125rem] text-foreground"
+              />
+              <span className="sr-only">{priorityLabel(project.priority)}</span>
+            </Row>
+            <Row label="Started">
+              <Value date={project.startDate} />
+            </Row>
+            <Row label="Target">
+              {project.targetEndDate ? (
+                <span className="space-x-1.5">
+                  <span className="tabular">
+                    {formatDayLong(project.targetEndDate)}
+                  </span>
+                  {!isClosed(project.status) ? (
+                    <span
+                      className={cn(
+                        "text-xs",
+                        daysUntil(project.targetEndDate) < 0
+                          ? "font-medium text-destructive"
+                          : daysUntil(project.targetEndDate) <= 7
+                            ? "font-medium text-signal"
+                            : "text-muted-foreground",
+                      )}
+                    >
+                      {describeDue(project.targetEndDate)}
+                    </span>
+                  ) : null}
                 </span>
-              ))}
-            </div>
-          </Panel>
-        ) : null}
+              ) : (
+                <Dash />
+              )}
+            </Row>
+            <Row label="Completed">
+              <Value date={project.actualEndDate} />
+            </Row>
 
-        {hasLinks ? (
-          <Panel
-            title="Links"
-            icon={ExternalLink}
-            className={cn(!hasTech && "sm:col-span-2")}
-          >
-            <div className="flex flex-wrap gap-2">
-              <LinkButton href={project.githubUrl} label="GitHub" icon={Github} />
-              <LinkButton href={project.liveUrl} label="Live" icon={Globe} />
-              <LinkButton href={project.designUrl} label="Design" icon={Palette} />
-              <LinkButton href={project.docsUrl} label="Docs" icon={FileText} />
-            </div>
-          </Panel>
-        ) : null}
+            {project.techStack.length > 0 ? (
+              <Row label="Tech stack" align="start">
+                <div className="flex flex-wrap gap-1">
+                  {project.techStack.map((tech) => (
+                    <span
+                      key={tech}
+                      className="rounded-sm bg-secondary px-1.5 py-0.5 text-xs text-foreground"
+                    >
+                      {tech}
+                    </span>
+                  ))}
+                </div>
+              </Row>
+            ) : null}
+
+            {project.projectTags.length > 0 ? (
+              <Row label="Tags" align="start">
+                <div className="flex flex-wrap gap-x-3 gap-y-1.5">
+                  {project.projectTags.map(({ tag }) => (
+                    <span
+                      key={tag.id}
+                      className="inline-flex items-center gap-1.5 text-xs text-foreground"
+                    >
+                      <span
+                        aria-hidden
+                        className="size-1.5 rounded-sm"
+                        style={{ backgroundColor: tag.color }}
+                      />
+                      {tag.name}
+                    </span>
+                  ))}
+                </div>
+              </Row>
+            ) : null}
+
+            {links.length > 0 ? (
+              <Row label="Links" align="start">
+                <div className="flex flex-col items-start gap-1.5">
+                  {links.map(({ href, label, icon: Icon }) => (
+                    <a
+                      key={label}
+                      href={href!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group inline-flex items-center gap-1.5 rounded-sm text-xs text-foreground transition-colors hover:text-primary"
+                    >
+                      <Icon className="size-3.5 text-muted-foreground transition-colors group-hover:text-primary" />
+                      {label}
+                      <ArrowUpRight className="size-3 text-muted-foreground/60" />
+                    </a>
+                  ))}
+                </div>
+              </Row>
+            ) : null}
+
+            <Row label="Updated">
+              <span className="text-muted-foreground">
+                {formatDistanceToNow(project.updatedAt, { addSuffix: true })}
+              </span>
+            </Row>
+          </dl>
+        </aside>
       </div>
-
-      {/* Description & notes — clearly separated content cards. */}
-      <ContentCard title="Description">
-        {project.description ? (
-          <p className="whitespace-pre-line text-sm leading-7 text-foreground">
-            {project.description}
-          </p>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            No description yet. Edit the project to add one.
-          </p>
-        )}
-      </ContentCard>
-
-      <ContentCard title="Notes">
-        {hasNotes ? (
-          <TiptapViewer content={project.notes as JSONContent} />
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            No notes yet. Edit the project to start capturing ideas.
-          </p>
-        )}
-      </ContentCard>
-    </div>
+    </article>
   );
 }
 
-function ProgressBar({ progress }: { progress: number }) {
-  const clamped = Math.min(100, Math.max(0, progress));
+function Prose({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>Progress</span>
-        <span className="font-medium text-foreground">{clamped}%</span>
-      </div>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
-        <div
-          className="h-full rounded-full bg-gradient-to-r from-lavender-500 to-lavender-400 transition-all duration-500 ease-out"
-          style={{ width: `${clamped}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
-/** Compact meta box (Priority / Tech stack / Links). */
-function Panel({
-  title,
-  icon: Icon,
-  className,
-  children,
-}: {
-  title: string;
-  icon: React.ComponentType<{ className?: string }>;
-  className?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      className={cn(
-        "rounded-xl border border-border bg-card p-5 shadow-xs",
-        className,
-      )}
-    >
-      <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        <Icon className="size-3.5" />
-        {title}
-      </div>
-      {children}
-    </div>
-  );
-}
-
-/** Larger separated section for long-form content (Description / Notes). */
-function ContentCard({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="space-y-3 rounded-xl border border-border bg-card p-6 shadow-xs">
-      <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+    <section className="space-y-3">
+      <h2 className="text-[0.9375rem] font-semibold tracking-tight text-foreground">
         {title}
       </h2>
       {children}
@@ -211,26 +215,53 @@ function ContentCard({
   );
 }
 
-function LinkButton({
-  href,
-  label,
-  icon: Icon,
-}: {
-  href: string | null;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-}) {
-  if (!href) return null;
+function Absent({ children }: { children: React.ReactNode }) {
   return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-secondary"
-    >
-      <Icon className="size-4 text-muted-foreground transition-colors group-hover:text-foreground" />
-      {label}
-      <ExternalLink className="size-3 text-muted-foreground" />
-    </a>
+    <p className="max-w-prose text-[0.8125rem] leading-relaxed text-muted-foreground">
+      {children}
+    </p>
   );
+}
+
+function Row({
+  label,
+  align = "center",
+  children,
+}: {
+  label: string;
+  align?: "center" | "start";
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className={cn(
+        "grid grid-cols-[5.5rem_minmax(0,1fr)] gap-3 border-b border-border py-2.5",
+        align === "center" ? "items-center" : "items-start",
+      )}
+    >
+      <dt className="text-xs text-muted-foreground">{label}</dt>
+      <dd className="min-w-0 text-foreground">{children}</dd>
+    </div>
+  );
+}
+
+function Value({ date }: { date: Date | null }) {
+  if (!date) return <Dash />;
+  return <span className="tabular">{formatDayLong(date)}</span>;
+}
+
+function Dash() {
+  return (
+    <span className="text-muted-foreground/50" aria-label="not set">
+      —
+    </span>
+  );
+}
+
+/** Tiptap writes `{}` for an empty document; treat that as no notes. */
+function readNotes(value: ProjectWithTags["notes"]): JSONContent | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value !== "object") return null;
+  if (Object.keys(value).length === 0) return null;
+  return value as JSONContent;
 }

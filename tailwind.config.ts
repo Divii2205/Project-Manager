@@ -2,38 +2,12 @@ import type { Config } from "tailwindcss";
 
 const config: Config = {
   darkMode: "class",
-  content: [
-    "./src/app/**/*.{ts,tsx}",
-    "./src/components/**/*.{ts,tsx}",
-  ],
+  // Everything under src: the lifecycle colour classes live in src/lib, and
+  // leaving that out silently dropped every status and priority colour.
+  content: ["./src/**/*.{ts,tsx}"],
   theme: {
-    container: {
-      center: true,
-      padding: "1.5rem",
-      screens: { "2xl": "1400px" },
-    },
     extend: {
       colors: {
-        // Brand
-        lavender: {
-          DEFAULT: "#8B5CF6",
-          deep: "#7C3AED",
-          50: "#F5F3FF",
-          100: "#EDE9FE",
-          200: "#DDD6FE",
-          300: "#C4B5FD",
-          400: "#A78BFA",
-          500: "#8B5CF6",
-          600: "#7C3AED",
-          700: "#6D28D9",
-          800: "#5B21B6",
-          900: "#4C1D95",
-        },
-        emerald: {
-          DEFAULT: "#10B981",
-        },
-
-        // Semantic tokens (resolved via CSS vars in globals.css)
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: {
@@ -67,23 +41,66 @@ const config: Config = {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
+
+        /* The second meaning-bearing colour: in progress, due soon. */
+        signal: "hsl(var(--signal))",
+
+        /* Lifecycle inks, addressable as `text-status-shipped` etc. */
+        status: {
+          idea: "hsl(var(--status-idea))",
+          planning: "hsl(var(--status-planning))",
+          progress: "hsl(var(--status-progress))",
+          shipped: "hsl(var(--status-shipped))",
+          paused: "hsl(var(--status-paused))",
+          abandoned: "hsl(var(--status-abandoned))",
+        },
+        priority: {
+          low: "hsl(var(--priority-low))",
+          medium: "hsl(var(--priority-medium))",
+          high: "hsl(var(--priority-high))",
+          critical: "hsl(var(--priority-critical))",
+        },
       },
+
+      /* Sharp and differentiated: chips → surfaces → overlays. Nothing in the
+         app is soft-cornered except the avatar. */
       borderRadius: {
-        xl: "calc(var(--radius) + 4px)",
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        none: "0",
+        sm: "2px",
+        DEFAULT: "3px",
+        md: "3px",
+        lg: "4px",
+        xl: "6px",
+        "2xl": "8px",
+        full: "9999px",
       },
+
       boxShadow: {
         xs: "var(--shadow-xs)",
         sm: "var(--shadow-sm)",
         DEFAULT: "var(--shadow-md)",
         md: "var(--shadow-md)",
         lg: "var(--shadow-lg)",
+        none: "none",
       },
+
       fontFamily: {
-        sans: ["var(--font-inter)", "ui-sans-serif", "system-ui", "sans-serif"],
+        sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
+        display: ["var(--font-display)", "ui-serif", "Georgia", "serif"],
+        mono: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
       },
+
+      letterSpacing: {
+        tightest: "-0.03em",
+        tighter: "-0.021em",
+        tight: "-0.013em",
+      },
+
+      maxWidth: {
+        content: "1180px",
+        prose: "68ch",
+      },
+
       keyframes: {
         "accordion-down": {
           from: { height: "0" },

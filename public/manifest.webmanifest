@@ -1,13 +1,12 @@
 {
   "name": "Project Manager",
   "short_name": "Projects",
-  "description": "Track your projects from idea to shipped.",
-  "start_url": "/",
+  "description": "A ledger for everything you're building, from idea to shipped.",
+  "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#FFFFFF",
-  "theme_color": "#8B5CF6",
+  "background_color": "#F1F0EC",
+  "theme_color": "#12564A",
   "icons": [
     {
       "src": "/icon.svg",

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,10 @@ export type DatePickerProps = {
   disabled?: boolean;
 };
 
+/* The picker speaks bare YYYY-MM-DD, the same shape the form schema and the
+   database use, so nothing shifts by a timezone on the way in or out. Dates
+   here are parsed and formatted in local time throughout; the UTC helpers in
+   lib/dates are for values read back out of the database. */
 function parseDate(s: string): Date | undefined {
   if (!s) return undefined;
   const [y, m, d] = s.split("-").map(Number);
@@ -40,7 +44,7 @@ function toIsoDate(d: Date): string {
 export function DatePicker({
   value,
   onChange,
-  placeholder = "Pick a date",
+  placeholder = "Not set",
   ariaLabel,
   id,
   className,
@@ -50,54 +54,51 @@ export function DatePicker({
   const date = parseDate(value);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          id={id}
+    <div className={cn("flex items-center gap-1", className)}>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button
+            id={id}
+            type="button"
+            aria-label={ariaLabel}
+            disabled={disabled}
+            className={cn(
+              "flex h-9 min-w-0 flex-1 items-center gap-2 rounded-sm border border-input bg-card px-2.5 text-sm",
+              "transition-colors duration-150 hover:border-foreground/25",
+              "disabled:cursor-not-allowed disabled:opacity-60",
+              date ? "text-foreground" : "text-muted-foreground/70",
+            )}
+          >
+            <CalendarIcon className="size-3.5 shrink-0 text-muted-foreground" />
+            <span className="tabular truncate">
+              {date ? format(date, "d MMM yyyy") : placeholder}
+            </span>
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="single"
+            selected={date}
+            defaultMonth={date}
+            onSelect={(d) => {
+              onChange(d ? toIsoDate(d) : "");
+              setOpen(false);
+            }}
+            autoFocus
+          />
+        </PopoverContent>
+      </Popover>
+      {date && !disabled ? (
+        <Button
           type="button"
-          aria-label={ariaLabel}
-          disabled={disabled}
-          className={cn(
-            "flex h-10 w-full items-center gap-2 rounded-lg border border-input bg-background px-3 py-2 text-sm",
-            "hover:bg-secondary/50 transition-colors",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-            "disabled:cursor-not-allowed disabled:opacity-50",
-            !date && "text-muted-foreground",
-            className,
-          )}
+          variant="ghost"
+          size="icon-sm"
+          aria-label={`Clear ${ariaLabel ?? "date"}`}
+          onClick={() => onChange("")}
         >
-          <CalendarIcon className="size-4 shrink-0 text-muted-foreground" />
-          <span className="truncate">
-            {date ? format(date, "MMM d, yyyy") : placeholder}
-          </span>
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <Calendar
-          mode="single"
-          selected={date}
-          onSelect={(d) => {
-            onChange(d ? toIsoDate(d) : "");
-            setOpen(false);
-          }}
-          autoFocus
-        />
-        {date ? (
-          <div className="flex justify-end border-t border-border p-2">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                onChange("");
-                setOpen(false);
-              }}
-            >
-              Clear
-            </Button>
-          </div>
-        ) : null}
-      </PopoverContent>
-    </Popover>
+          <X />
+        </Button>
+      ) : null}
+    </div>
   );
 }

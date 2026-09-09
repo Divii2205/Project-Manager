@@ -10,13 +10,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Section } from "@/components/section";
 import { UserAvatar } from "@/components/layout/user-avatar";
 import { updateProfile } from "@/app/actions/account";
 
@@ -50,74 +44,60 @@ export function ProfileSection({ user }: ProfileSectionProps) {
     startTransition(async () => {
       try {
         await updateProfile({ name: values.name });
-        toast.success("Profile updated");
+        toast.success("Profile saved");
         reset(values);
       } catch {
-        toast.error("Couldn't update profile");
+        toast.error("Could not save your profile. Try again.");
       }
     });
   });
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Profile</CardTitle>
-        <CardDescription>How you appear inside the app.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={submit} className="space-y-5">
-          <div className="flex items-center gap-4">
-            <UserAvatar
-              name={user.name}
-              email={user.email}
-              image={user.image}
-              className="size-14 text-base"
-            />
-            <div className="min-w-0 space-y-0.5">
-              <p className="truncate text-sm font-medium text-foreground">
-                {user.name ?? "Set a display name"}
-              </p>
-              <p className="truncate text-xs text-muted-foreground">
-                {user.email}
-              </p>
-            </div>
+    <Section title="Profile" description="How you appear inside the app.">
+      <form onSubmit={submit} className="space-y-5">
+        <div className="flex items-center gap-3">
+          <UserAvatar
+            name={user.name}
+            email={user.email}
+            image={user.image}
+            className="size-11 text-sm"
+          />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium text-foreground">
+              {user.name?.trim() || "No display name set"}
+            </p>
+            <p className="truncate text-xs text-muted-foreground">
+              {user.email}
+            </p>
           </div>
+        </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="name">Display name</Label>
-              <Input
-                id="name"
-                placeholder="Your name"
-                {...register("name")}
-              />
-              {errors.name?.message ? (
-                <p className="text-xs text-destructive">{errors.name.message}</p>
-              ) : null}
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                value={user.email}
-                disabled
-                readOnly
-                className="cursor-not-allowed bg-secondary/50"
-              />
-              <p className="text-xs text-muted-foreground">
-                Email comes from your sign-in provider.
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="name">Display name</Label>
+            <Input id="name" placeholder="Your name" {...register("name")} />
+            {errors.name?.message ? (
+              <p role="alert" className="text-xs text-destructive">
+                {errors.name.message}
               </p>
-            </div>
+            ) : null}
           </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="email">Email</Label>
+            <Input id="email" value={user.email} disabled readOnly />
+            <p className="text-xs text-muted-foreground">
+              Set by whichever provider you sign in with.
+            </p>
+          </div>
+        </div>
 
-          <div className="flex justify-end">
-            <Button type="submit" disabled={isPending || !isDirty}>
-              {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-              Save changes
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+        <div>
+          <Button type="submit" disabled={isPending || !isDirty}>
+            {isPending ? <Loader2 className="animate-spin" /> : null}
+            Save profile
+          </Button>
+        </div>
+      </form>
+    </Section>
   );
 }

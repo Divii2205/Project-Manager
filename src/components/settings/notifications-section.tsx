@@ -5,20 +5,16 @@ import { toast } from "sonner";
 
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Section } from "@/components/section";
 import { setNotifyDeadlines } from "@/app/actions/account";
 
 export type NotificationsSectionProps = {
   initialEnabled: boolean;
 };
 
-export function NotificationsSection({ initialEnabled }: NotificationsSectionProps) {
+export function NotificationsSection({
+  initialEnabled,
+}: NotificationsSectionProps) {
   const [enabled, setEnabled] = useState(initialEnabled);
   const [isPending, startTransition] = useTransition();
 
@@ -28,45 +24,34 @@ export function NotificationsSection({ initialEnabled }: NotificationsSectionPro
     startTransition(async () => {
       try {
         await setNotifyDeadlines(next);
-        toast.success(
-          next
-            ? "Deadline reminders enabled"
-            : "Deadline reminders turned off",
-        );
+        toast.success(next ? "Reminders on" : "Reminders off");
       } catch {
         setEnabled(previous);
-        toast.error("Couldn't update notification setting");
+        toast.error("Could not change the setting. Try again.");
       }
     });
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Notifications</CardTitle>
-        <CardDescription>
-          Decide when you want the app to nudge you.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-start justify-between gap-4 rounded-lg border border-border p-4">
-          <div className="space-y-1">
-            <Label htmlFor="notify-deadlines" className="text-sm font-medium">
-              Deadline reminders
-            </Label>
-            <p className="text-xs text-muted-foreground">
-              Email you when a project&apos;s target end date is within 7 days.
-              You can change this any time.
-            </p>
-          </div>
-          <Switch
-            id="notify-deadlines"
-            checked={enabled}
-            onCheckedChange={toggle}
-            disabled={isPending}
-          />
+    <Section
+      title="Notifications"
+      description="When the app is allowed to email you."
+    >
+      <div className="flex items-start justify-between gap-6 rounded-lg border border-border bg-card p-4">
+        <div className="space-y-1">
+          <Label htmlFor="notify-deadlines">Deadline reminders</Label>
+          <p className="max-w-md text-xs leading-relaxed text-muted-foreground">
+            One email a day listing any open project whose target date lands
+            within a week. Nothing is sent when there is nothing due.
+          </p>
         </div>
-      </CardContent>
-    </Card>
+        <Switch
+          id="notify-deadlines"
+          checked={enabled}
+          onCheckedChange={toggle}
+          disabled={isPending}
+        />
+      </div>
+    </Section>
   );
 }

@@ -5,18 +5,16 @@ import { ProjectForm } from "@/components/projects/project-form";
 import { createProject } from "@/app/actions/projects";
 import { requireUserId } from "@/lib/projects";
 
-export const metadata: Metadata = {
-  title: "New project",
-};
+export const metadata: Metadata = { title: "New project" };
 
 export default async function NewProjectPage() {
   await requireUserId();
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-4xl space-y-8">
       <PageHeader
         title="New project"
-        description="Capture an idea and start tracking it."
+        description="Only a title is required. Everything else can be filled in as the project takes shape."
       />
       <ProjectForm mode="create" onSubmit={createProject} />
     </div>

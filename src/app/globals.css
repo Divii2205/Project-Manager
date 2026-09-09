@@ -2,201 +2,239 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   Ledger design tokens.
+
+   Light is "paper": a warm-neutral stone ground with white surfaces raised
+   above it. (The reverse — grey cards on a white page — is what made the old
+   UI read as flat.) Ink is warm near-black. Pine is the only accent, and it
+   only appears where it carries meaning: primary action, active nav, shipped.
+
+   Every token is a bare `H S% L%` triplet so Tailwind's `/opacity` modifiers
+   work on all of them.
+   ────────────────────────────────────────────────────────────────────────── */
+
 @layer base {
   :root {
-    /* Light mode — spec Part 3 */
-    --background: 0 0% 100%;            /* #FFFFFF */
-    --foreground: 222 47% 11%;          /* near-black ink */
+    --background: 48 15% 94%;         /* #F1F0EC  paper   */
+    --foreground: 36 11% 9%;          /* #1A1815  ink     */
 
-    --card: 220 14% 97%;                /* #F9FAFB */
-    --card-foreground: 222 47% 11%;
+    --card: 0 0% 100%;                /* surfaces sit above the ground */
+    --card-foreground: 36 11% 9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 36 11% 9%;
 
-    --primary: 262 83% 58%;             /* lavender #8B5CF6 */
-    --primary-foreground: 0 0% 100%;
+    --primary: 169 65% 20%;           /* #12564A  pine    */
+    --primary-foreground: 48 20% 97%;
 
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 44 13% 90%;
+    --secondary-foreground: 36 11% 9%;
 
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 44 13% 90%;
+    --muted-foreground: 40 6% 40%;
 
-    --accent: 220 14% 96%;
-    --accent-foreground: 222 47% 11%;
+    --accent: 44 13% 88%;
+    --accent-foreground: 36 11% 9%;
 
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 1 45% 36%;
+    --destructive-foreground: 48 20% 97%;
 
-    --border: 220 13% 91%;              /* #E5E7EB */
-    --input: 220 13% 91%;
-    --ring: 262 83% 58%;                /* lavender focus ring */
+    --border: 44 15% 85%;             /* #DFDCD4  rule    */
+    --input: 44 15% 82%;
+    --ring: 169 65% 20%;
 
-    --radius: 0.5rem;
+    /* Signal — the second meaning-bearing colour (in progress, due soon). */
+    --signal: 37 81% 33%;             /* #9A6510  ochre   */
 
-    /* Soft, layered elevation — never harsh (spec Part 3). */
-    --shadow-xs: 0 1px 2px 0 hsl(222 47% 11% / 0.04);
-    --shadow-sm: 0 1px 2px 0 hsl(222 47% 11% / 0.05),
-      0 1px 3px 0 hsl(222 47% 11% / 0.04);
-    --shadow-md: 0 2px 4px -1px hsl(222 47% 11% / 0.05),
-      0 8px 18px -6px hsl(222 47% 11% / 0.1);
-    --shadow-lg: 0 4px 8px -2px hsl(222 47% 11% / 0.06),
-      0 18px 36px -10px hsl(222 47% 11% / 0.14);
+    /* Lifecycle inks. Deep and desaturated, so six of them on one screen
+       still read as data rather than confetti. */
+    --status-idea: 40 6% 41%;         /* graphite */
+    --status-planning: 211 30% 34%;   /* slate    */
+    --status-progress: 37 81% 33%;    /* ochre    */
+    --status-shipped: 169 65% 20%;    /* pine     */
+    --status-paused: 25 42% 35%;      /* clay     */
+    --status-abandoned: 1 42% 38%;    /* claret   */
+
+    /* Priority reads as weight, not hue — only CRITICAL earns a colour. */
+    --priority-low: 40 6% 62%;
+    --priority-medium: 40 6% 41%;
+    --priority-high: 37 81% 33%;
+    --priority-critical: 1 42% 38%;
+
+    /* Elevation is for things floating above the page, nothing else. */
+    --shadow-xs: 0 1px 1px 0 hsl(36 11% 9% / 0.04);
+    --shadow-sm: 0 1px 2px 0 hsl(36 11% 9% / 0.05);
+    --shadow-md: 0 4px 12px -4px hsl(36 11% 9% / 0.1);
+    --shadow-lg: 0 12px 32px -12px hsl(36 11% 9% / 0.18),
+      0 2px 6px -2px hsl(36 11% 9% / 0.08);
   }
 
   .dark {
-    /* Dark mode — spec Part 3 */
-    --background: 0 0% 4%;              /* #0a0a0a */
-    --foreground: 0 0% 98%;
+    --background: 30 6% 7%;           /* #131211 */
+    --foreground: 40 21% 92%;         /* #EEEBE5 */
 
-    --card: 0 0% 7%;                    /* #111111 */
-    --card-foreground: 0 0% 98%;
+    --card: 40 6% 10%;                /* #1A1917 */
+    --card-foreground: 40 21% 92%;
 
-    --popover: 0 0% 7%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 40 6% 12%;
+    --popover-foreground: 40 21% 92%;
 
-    --primary: 262 83% 64%;             /* lavender, slightly lifted for dark */
-    --primary-foreground: 0 0% 100%;
+    --primary: 164 38% 49%;           /* pine, lifted for dark ground */
+    --primary-foreground: 169 70% 8%;
 
-    --secondary: 0 0% 12%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 36 6% 16%;
+    --secondary-foreground: 40 21% 92%;
 
-    --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 63%;
+    --muted: 36 6% 16%;
+    --muted-foreground: 40 6% 62%;
 
-    --accent: 0 0% 12%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 36 6% 19%;
+    --accent-foreground: 40 21% 92%;
 
-    --destructive: 0 62% 50%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 2 55% 52%;
+    --destructive-foreground: 40 21% 96%;
 
-    --border: 0 0% 100% / 0.1;          /* border-white/10 — set on .dark via utility too */
-    --input: 0 0% 100% / 0.1;
-    --ring: 262 83% 64%;
+    --border: 36 6% 17%;
+    --input: 36 6% 22%;
+    --ring: 164 38% 49%;
 
-    /* Dark mode leans on borders for separation; shadows stay quiet. */
-    --shadow-xs: 0 1px 2px 0 hsl(0 0% 0% / 0.4);
-    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.5);
-    --shadow-md: 0 2px 4px -1px hsl(0 0% 0% / 0.4),
-      0 10px 24px -6px hsl(0 0% 0% / 0.6);
-    --shadow-lg: 0 4px 8px -2px hsl(0 0% 0% / 0.5),
-      0 20px 40px -10px hsl(0 0% 0% / 0.7);
+    --signal: 36 64% 55%;
+
+    --status-idea: 40 5% 55%;
+    --status-planning: 211 40% 62%;
+    --status-progress: 36 64% 55%;
+    --status-shipped: 164 38% 49%;
+    --status-paused: 25 45% 58%;
+    --status-abandoned: 2 55% 62%;
+
+    --priority-low: 40 5% 40%;
+    --priority-medium: 40 5% 60%;
+    --priority-high: 36 64% 55%;
+    --priority-critical: 2 55% 62%;
+
+    --shadow-xs: 0 1px 1px 0 hsl(0 0% 0% / 0.3);
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.4);
+    --shadow-md: 0 4px 12px -4px hsl(0 0% 0% / 0.5);
+    --shadow-lg: 0 12px 32px -12px hsl(0 0% 0% / 0.7),
+      0 2px 6px -2px hsl(0 0% 0% / 0.4);
   }
 
   * {
     @apply border-border;
   }
-  html {
-    @apply scroll-smooth;
-  }
+
   body {
     @apply bg-background text-foreground antialiased;
-    font-feature-settings: "cv11", "ss01", "ss03";
     text-rendering: optimizeLegibility;
   }
-  /* Whisper-faint lavender wash so large surfaces never read as flat.
-     A fixed pseudo-element avoids the scroll repaint cost of
-     `background-attachment: fixed`. */
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    background-image: radial-gradient(
-      60rem 40rem at 100% -10%,
-      hsl(var(--primary) / 0.05),
-      transparent 60%
-    );
+
+  /* Numerals line up in every column they appear in. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
   }
 
-  /* Premium text selection */
   ::selection {
-    background-color: hsl(var(--primary) / 0.18);
+    background-color: hsl(var(--primary) / 0.16);
     color: hsl(var(--foreground));
   }
 
-  /* Refined, unobtrusive scrollbars */
   * {
     scrollbar-width: thin;
-    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.28) transparent;
   }
   ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
   }
   ::-webkit-scrollbar-thumb {
-    background-color: hsl(var(--muted-foreground) / 0.25);
-    border-radius: 9999px;
+    background-color: hsl(var(--muted-foreground) / 0.24);
     border: 3px solid transparent;
     background-clip: content-box;
+    border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
     background-color: hsl(var(--muted-foreground) / 0.4);
   }
+
+  /* Focus is a solid pine outline — no offset ring, so it reads the same on
+     the paper ground and on white surfaces. */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 1px;
+  }
 }
 
 @layer utilities {
-  /* Subtle entrance for page content — respects reduced-motion. */
-  .animate-rise {
-    animation: rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  /* The one orchestrated motion in the app: lifecycle bars grow on load. */
+  .animate-grow {
+    transform-origin: bottom;
+    animation: grow 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
-  @keyframes rise {
+  @keyframes grow {
     from {
-      opacity: 0;
-      transform: translateY(8px);
+      transform: scaleY(0);
     }
     to {
-      opacity: 1;
-      transform: translateY(0);
+      transform: scaleY(1);
     }
   }
+
   @media (prefers-reduced-motion: reduce) {
-    .animate-rise {
+    .animate-grow {
       animation: none;
     }
-    html {
-      scroll-behavior: auto;
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
     }
   }
 }
 
-/* Tiptap content — used by both editor and viewer. */
-.tiptap-content .ProseMirror,
+/* ─── Tiptap content — shared by the editor and the read-only viewer ──────── */
+
 .tiptap-content {
-  @apply text-sm leading-7 text-foreground;
+  @apply text-[0.9375rem] leading-[1.7] text-foreground;
+}
+.tiptap-content .ProseMirror:focus {
+  outline: none;
 }
 .tiptap-content p {
-  @apply my-3 first:mt-0 last:mb-0;
+  @apply my-3 max-w-[68ch] first:mt-0 last:mb-0;
 }
 .tiptap-content h2 {
-  @apply mb-2 mt-6 text-xl font-semibold tracking-tight;
+  @apply mb-2 mt-7 text-lg font-semibold tracking-[-0.011em] first:mt-0;
 }
 .tiptap-content h3 {
-  @apply mb-2 mt-5 text-base font-semibold tracking-tight;
+  @apply mb-1.5 mt-5 text-[0.9375rem] font-semibold tracking-[-0.006em] first:mt-0;
 }
 .tiptap-content ul {
-  @apply my-3 list-disc space-y-1 pl-6;
+  @apply my-3 max-w-[68ch] list-disc space-y-1 pl-5;
 }
 .tiptap-content ol {
-  @apply my-3 list-decimal space-y-1 pl-6;
+  @apply my-3 max-w-[68ch] list-decimal space-y-1 pl-5;
+}
+.tiptap-content li::marker {
+  @apply text-muted-foreground;
 }
 .tiptap-content blockquote {
-  @apply my-3 border-l-2 border-primary/40 pl-4 italic text-muted-foreground;
+  @apply my-4 max-w-[68ch] border-l-2 border-primary/50 pl-4 text-muted-foreground;
 }
 .tiptap-content code {
-  @apply rounded bg-secondary px-1.5 py-0.5 font-mono text-xs;
+  @apply rounded-sm bg-secondary px-1 py-0.5 font-mono text-[0.85em];
 }
 .tiptap-content pre {
-  @apply my-3 overflow-x-auto rounded-lg bg-secondary p-3 font-mono text-xs;
+  @apply my-4 overflow-x-auto rounded-lg border border-border bg-secondary/60 p-3 font-mono text-xs leading-relaxed;
 }
 .tiptap-content pre code {
-  @apply bg-transparent p-0;
+  @apply bg-transparent p-0 text-xs;
 }
 .tiptap-content a {
-  @apply text-primary underline underline-offset-4 hover:opacity-80;
+  @apply text-primary underline decoration-primary/30 underline-offset-[3px] transition-colors hover:decoration-primary;
 }
 .tiptap-content hr {
-  @apply my-4 border-border;
+  @apply my-6 border-border;
 }

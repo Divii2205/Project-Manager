@@ -2,47 +2,54 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Plus, Sparkles } from "lucide-react";
+import { Plus } from "lucide-react";
 
 import { primaryNav } from "@/lib/nav";
 import { cn } from "@/lib/utils";
+import { Mark } from "@/components/mark";
 import { Button } from "@/components/ui/button";
-import { SignOutButton } from "@/components/layout/sign-out-button";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { UserMenu } from "@/components/layout/user-menu";
 
 export type SidebarBodyProps = {
+  user: {
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  };
   onNavigate?: () => void;
 };
 
-export function SidebarBody({ onNavigate }: SidebarBodyProps) {
+export function SidebarBody({ user, onNavigate }: SidebarBodyProps) {
   const pathname = usePathname();
 
   return (
     <div className="flex h-full flex-col">
-      <Link
-        href="/dashboard"
-        onClick={onNavigate}
-        aria-label="Project Manager — go to dashboard"
-        className="flex h-16 items-center gap-2.5 border-b border-border px-5 transition-colors hover:bg-secondary/50 focus-visible:outline-none focus-visible:bg-secondary/60"
-      >
-        <span className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-lavender-500 to-lavender-600 text-primary-foreground shadow-sm shadow-primary/20 ring-1 ring-inset ring-white/10">
-          <Sparkles className="size-4" />
-        </span>
-        <span className="text-sm font-semibold tracking-tight">
-          Project Manager
-        </span>
-      </Link>
+      <div className="px-4 pb-5 pt-5">
+        <Link
+          href="/dashboard"
+          onClick={onNavigate}
+          aria-label="Project Manager, go to dashboard"
+          className="inline-flex items-center gap-2.5 rounded-sm"
+        >
+          <Mark />
+          <span className="text-[0.8125rem] font-semibold tracking-tight">
+            Project Manager
+          </span>
+        </Link>
+      </div>
 
-      <div className="px-3 pt-4">
-        <Button asChild className="w-full justify-start gap-2">
+      <div className="px-3">
+        <Button asChild className="w-full justify-start">
           <Link href="/projects/new" onClick={onNavigate}>
-            <Plus className="size-4" />
+            <Plus />
             New project
           </Link>
         </Button>
       </div>
 
-      <nav className="flex-1 px-3 py-4">
-        <ul className="space-y-1">
+      <nav className="flex-1 px-3 py-5">
+        <ul className="space-y-0.5">
           {primaryNav.map((item) => {
             const Icon = item.icon;
             const active =
@@ -52,14 +59,16 @@ export function SidebarBody({ onNavigate }: SidebarBodyProps) {
                 <Link
                   href={item.href}
                   onClick={onNavigate}
+                  aria-current={active ? "page" : undefined}
                   className={cn(
-                    "relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                    "relative flex items-center gap-2.5 rounded-sm px-2.5 py-1.5 text-[0.8125rem] transition-colors",
+                    "before:absolute before:inset-y-1 before:left-[-0.75rem] before:w-[2px] before:rounded-r-sm",
                     active
-                      ? "bg-primary/10 text-primary before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-r before:bg-primary"
-                      : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                      ? "bg-secondary font-medium text-foreground before:bg-primary"
+                      : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground",
                   )}
                 >
-                  <Icon className="size-4" />
+                  <Icon className="size-4 shrink-0" />
                   {item.label}
                 </Link>
               </li>
@@ -68,8 +77,9 @@ export function SidebarBody({ onNavigate }: SidebarBodyProps) {
         </ul>
       </nav>
 
-      <div className="border-t border-border p-3">
-        <SignOutButton />
+      <div className="flex items-center gap-1 border-t border-border p-3">
+        <UserMenu user={user} onNavigate={onNavigate} />
+        <ThemeToggle />
       </div>
     </div>
   );

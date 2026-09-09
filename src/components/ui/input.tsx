@@ -5,23 +5,22 @@ import { cn } from "@/lib/utils";
 export type InputProps = React.InputHTMLAttributes<HTMLInputElement>;
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, ...props }, ref) => {
-    return (
-      <input
-        type={type}
-        className={cn(
-          "flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-xs transition-colors",
-          "placeholder:text-muted-foreground",
-          "hover:border-muted-foreground/30",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-          "disabled:cursor-not-allowed disabled:opacity-50",
-          "file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground",
-          className,
-        )}
-        ref={ref}
-        {...props}
-      />
-    );
-  },
+  ({ className, type, ...props }, ref) => (
+    <input
+      type={type}
+      className={cn(
+        "flex h-9 w-full rounded-sm border border-input bg-card px-2.5 text-sm text-foreground",
+        "transition-colors duration-150",
+        "placeholder:text-muted-foreground/70",
+        "hover:border-foreground/25",
+        "disabled:cursor-not-allowed disabled:bg-secondary/50 disabled:opacity-70",
+        "aria-[invalid=true]:border-destructive",
+        "file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground",
+        className,
+      )}
+      ref={ref}
+      {...props}
+    />
+  ),
 );
 Input.displayName = "Input";

@@ -3,7 +3,7 @@ import { Suspense } from "react";
 
 import { getSession } from "@/lib/auth";
 import { Sidebar } from "@/components/layout/sidebar";
-import { Header } from "@/components/layout/header";
+import { MobileNav } from "@/components/layout/mobile-nav";
 import { Toaster } from "@/components/toaster";
 import { ToastFlasher } from "@/components/toast-flasher";
 
@@ -15,13 +15,19 @@ export default async function AppLayout({
     redirect("/login");
   }
 
+  const user = {
+    name: session.user.name,
+    email: session.user.email,
+    image: session.user.image,
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar />
+    <div className="min-h-screen">
+      <Sidebar user={user} />
+      <MobileNav user={user} />
       <div className="md:pl-60">
-        <Header user={session.user} />
-        <main className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-          <div className="animate-rise">{children}</div>
+        <main className="mx-auto max-w-content px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
+          {children}
         </main>
       </div>
       <Toaster />

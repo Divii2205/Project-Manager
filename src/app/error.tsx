@@ -16,11 +16,14 @@ export default function RootError({
   }, [error]);
 
   return (
-    <ErrorState
-      title="Something went wrong"
-      description="An unexpected error occurred. Try again — if it keeps happening, the database might be unreachable."
-      primary={{ label: "Try again", onClick: reset }}
-      secondary={{ label: "Go home", href: "/" }}
-    />
+    <main className="mx-auto flex min-h-screen max-w-content items-center px-6 sm:px-8">
+      <ErrorState
+        title="Something went wrong"
+        description="Try again. If it keeps happening, the database is probably unreachable."
+        primary={{ label: "Try again", onClick: reset }}
+        secondary={{ label: "Go home", href: "/" }}
+        detail={error.digest ? `Reference ${error.digest}` : undefined}
+      />
+    </main>
   );
 }

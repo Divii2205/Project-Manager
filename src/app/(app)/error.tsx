@@ -17,10 +17,11 @@ export default function AppError({
 
   return (
     <ErrorState
-      title="We couldn't load this page"
-      description="Something went wrong while fetching your data. Try again, or head back to the dashboard."
+      title="This page could not load"
+      description="The data did not come back. Try again, or head to the dashboard."
       primary={{ label: "Try again", onClick: reset }}
-      secondary={{ label: "Back to dashboard", href: "/dashboard" }}
+      secondary={{ label: "Dashboard", href: "/dashboard" }}
+      detail={error.digest ? `Reference ${error.digest}` : undefined}
     />
   );
 }

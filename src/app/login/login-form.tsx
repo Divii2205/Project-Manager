@@ -5,7 +5,7 @@ import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, Mail } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,10 +35,11 @@ export function LoginForm() {
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <Button
         type="button"
         variant="outline"
+        size="lg"
         className="w-full"
         disabled={googleLoading}
         onClick={() => {
@@ -47,7 +48,7 @@ export function LoginForm() {
         }}
       >
         {googleLoading ? (
-          <Loader2 className="size-4 animate-spin" />
+          <Loader2 className="animate-spin" />
         ) : (
           <GoogleIcon className="size-4" />
         )}
@@ -56,7 +57,7 @@ export function LoginForm() {
 
       <div className="flex items-center gap-3 text-xs text-muted-foreground">
         <span className="h-px flex-1 bg-border" />
-        or
+        or use email
         <span className="h-px flex-1 bg-border" />
       </div>
 
@@ -74,17 +75,20 @@ export function LoginForm() {
             {...register("email")}
           />
           {errors.email ? (
-            <p className="text-xs text-destructive">{errors.email.message}</p>
+            <p role="alert" className="text-xs text-destructive">
+              {errors.email.message}
+            </p>
           ) : null}
         </div>
 
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <Mail className="size-4" />
-          )}
-          Send link
+        <Button
+          type="submit"
+          size="lg"
+          className="w-full"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? <Loader2 className="animate-spin" /> : null}
+          Email me a sign-in link
         </Button>
       </form>
     </div>
@@ -93,11 +97,7 @@ export function LoginForm() {
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      aria-hidden
-      className={className}
-    >
+    <svg viewBox="0 0 24 24" aria-hidden className={className}>
       <path
         d="M21.6 12.227c0-.709-.064-1.39-.182-2.045H12v3.868h5.382a4.6 4.6 0 0 1-1.995 3.018v2.51h3.232c1.89-1.74 2.98-4.305 2.98-7.351z"
         fill="#4285F4"

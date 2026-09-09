@@ -2,6 +2,8 @@
 
 import { useEffect } from "react";
 
+/** Last resort: the root layout itself failed, so there are no app styles or
+ *  fonts to rely on here. */
 export default function GlobalError({
   error,
   reset,
@@ -20,45 +22,68 @@ export default function GlobalError({
           minHeight: "100vh",
           display: "flex",
           alignItems: "center",
-          justifyContent: "center",
           padding: "1.5rem",
+          margin: 0,
+          background: "#F1F0EC",
+          color: "#1A1815",
           fontFamily:
             "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-          color: "#0f172a",
-          background: "#fff",
-          margin: 0,
         }}
       >
-        <div style={{ maxWidth: "28rem", textAlign: "center" }}>
-          <h1 style={{ fontSize: "1.25rem", fontWeight: 600, margin: 0 }}>
-            Something went very wrong
+        <div style={{ maxWidth: "34rem", margin: "0 auto" }}>
+          <div
+            style={{ width: "2.5rem", height: "2px", background: "#8A3A38" }}
+          />
+          <h1
+            style={{
+              fontSize: "1.375rem",
+              fontWeight: 600,
+              letterSpacing: "-0.02em",
+              margin: "1rem 0 0",
+            }}
+          >
+            The app could not render
           </h1>
           <p
             style={{
-              marginTop: "0.5rem",
+              margin: "0.5rem 0 0",
               fontSize: "0.875rem",
-              color: "#64748b",
+              lineHeight: 1.6,
+              color: "#6B6862",
             }}
           >
-            The app could not render. Refresh and try again.
+            Something failed before the interface loaded. Reloading usually
+            clears it.
           </p>
           <button
             type="button"
             onClick={reset}
             style={{
-              marginTop: "1rem",
-              padding: "0.5rem 1rem",
-              borderRadius: "0.5rem",
-              background: "#8B5CF6",
-              color: "#fff",
+              marginTop: "1.5rem",
+              padding: "0.5rem 0.875rem",
+              borderRadius: "2px",
+              background: "#12564A",
+              color: "#F1F0EC",
               border: "none",
-              fontSize: "0.875rem",
+              fontSize: "0.8125rem",
               fontWeight: 500,
               cursor: "pointer",
             }}
           >
             Try again
           </button>
+          {error.digest ? (
+            <p
+              style={{
+                marginTop: "1.5rem",
+                fontSize: "0.6875rem",
+                color: "#8A8880",
+                fontFamily: "ui-monospace, monospace",
+              }}
+            >
+              Reference {error.digest}
+            </p>
+          ) : null}
         </div>
       </body>
     </html>

@@ -12,17 +12,20 @@ export const Slider = React.forwardRef<
   <SliderPrimitive.Root
     ref={ref}
     className={cn(
-      "relative flex w-full touch-none select-none items-center",
+      "relative flex w-full touch-none select-none items-center py-2",
       className,
     )}
     {...props}
   >
-    <SliderPrimitive.Track className="relative h-1.5 w-full grow overflow-hidden rounded-full bg-secondary">
+    <SliderPrimitive.Track className="relative h-1 w-full grow overflow-hidden rounded-full bg-foreground/[0.09]">
       <SliderPrimitive.Range className="absolute h-full bg-primary" />
     </SliderPrimitive.Track>
     <SliderPrimitive.Thumb
       aria-label="Value"
-      className="block size-4 rounded-full border-2 border-primary bg-background shadow-sm transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50"
+      className={cn(
+        "block h-4 w-2 rounded-sm border border-primary bg-primary transition-transform duration-150",
+        "hover:scale-y-125 disabled:pointer-events-none disabled:opacity-50",
+      )}
     />
   </SliderPrimitive.Root>
 ));

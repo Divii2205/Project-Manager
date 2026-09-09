@@ -16,10 +16,13 @@ export default function LoginError({
   }, [error]);
 
   return (
-    <ErrorState
-      title="Couldn't sign you in"
-      description="The auth flow hit an error. Try again — if it persists, double-check your provider keys."
-      primary={{ label: "Try again", onClick: reset }}
-    />
+    <main className="mx-auto flex min-h-screen max-w-content items-center px-6 sm:px-8">
+      <ErrorState
+        title="Sign-in could not start"
+        description="The auth flow hit an error before it began. Try again, and check the provider keys if it persists."
+        primary={{ label: "Try again", onClick: reset }}
+        detail={error.digest ? `Reference ${error.digest}` : undefined}
+      />
+    </main>
   );
 }

@@ -31,28 +31,25 @@ export function DeleteProjectButton({
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button
-          variant="outline"
-          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-        >
-          <Trash2 className="size-4" />
+        <Button variant="danger">
+          <Trash2 />
           Delete
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete this project?</AlertDialogTitle>
+          <AlertDialogTitle>Delete {projectTitle}?</AlertDialogTitle>
           <AlertDialogDescription>
-            <span className="font-medium text-foreground">{projectTitle}</span>{" "}
-            will be moved to trash. This is a soft delete — the data stays in
-            the database but disappears from your dashboard and lists.
+            It disappears from your dashboard and lists straight away. The
+            record itself stays in the database, so it can be restored by hand
+            if you ever need it.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending}>Keep it</AlertDialogCancel>
           <AlertDialogAction
             disabled={isPending}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/[0.88]"
             onClick={(e) => {
               e.preventDefault();
               startTransition(async () => {
@@ -60,7 +57,7 @@ export function DeleteProjectButton({
               });
             }}
           >
-            {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+            {isPending ? <Loader2 className="animate-spin" /> : null}
             Delete project
           </AlertDialogAction>
         </AlertDialogFooter>

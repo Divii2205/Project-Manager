@@ -15,6 +15,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   pages: {
     signIn: "/login",
+    // Both of these default to unstyled Auth.js pages, so point them at ours.
+    verifyRequest: "/login/check-email",
+    error: "/login",
   },
   providers: [
     Google({
